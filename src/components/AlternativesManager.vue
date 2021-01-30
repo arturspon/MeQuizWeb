@@ -4,6 +4,17 @@
       <b>{{ quiz.name }}</b>
     </div>
 
+    <div class="progress">
+      <div
+        class="progress-bar"
+        role="progressbar"
+        :style="`width: ${getTimeRemainingPercentage()}%`"
+        :aria-valuenow="getTimeRemainingPercentage()"
+        aria-valuemin="0"
+        aria-valuemax="100">
+      </div>
+    </div>
+
     <div class="my-3 ml-3 mr-3">
 
       <div class="question bg-white rounded text-dark py-5 pl-1 pr-1" v-html="getQuestionText()">
@@ -23,6 +34,7 @@
 
 <script>
 import Alternative from '@/components/Alternative'
+import Swal from 'sweetalert2'
 
 export default {
   name: 'AlternativesManager',
@@ -40,7 +52,12 @@ export default {
     return {
       currentQuestionIndex: 0,
       quizOwnerName: '',
-      alternativeOffset: 0
+      alternativeOffset: 0,
+      alternativeTimeoutCaseValue: -99,
+
+      questionTimeLimit: 20,
+      questionInterval: null,
+      questionSecondsElapsed: 0
     }
   },
 
@@ -58,6 +75,10 @@ export default {
           this.saveQuestionAnswer(alternativeIndex)
         }
       )
+      this.$bus.$on('startAnsweringQuiz', () => {
+        console.log('starting')
+        this.startQuestionTimer()
+      })
     },
 
     getQuestionText () {
@@ -96,12 +117,16 @@ export default {
       return alternatives
     },
 
-    nextQuestion () {
+    prepareAndShowNextQuestion () {
+      this.questionSecondsElapsed = 0
       this.currentQuestionIndex++
+      this.$bus.$emit('toggleInteraction', true)
+      this.startQuestionTimer()
     },
 
     async saveQuestionAnswer (alternativeIndex) {
-      console.log(`alternative ${alternativeIndex} selected`)
+      this.lastAlternativeSelected = alternativeIndex
+      clearInterval(this.questionInterval)
 
       const updatedAnswers = (await this.$store.state.quizAttemptRef.get()).data().answers
       updatedAnswers.push(alternativeIndex)
@@ -111,9 +136,43 @@ export default {
       }, { merge: true })
 
       setTimeout(() => {
-        this.nextQuestion()
-        this.$bus.$emit('toggleInteraction', true)
+        if (alternativeIndex !== this.alternativeTimeoutCaseValue) {
+          this.prepareAndShowNextQuestion()
+        }
       }, 2500)
+    },
+
+    startQuestionTimer () {
+      this.questionInterval = setInterval(() => {
+        this.questionSecondsElapsed++
+        if (this.questionSecondsElapsed >= this.questionTimeLimit) {
+          clearInterval(this.questionInterval)
+          this.showQuestionTimeoutDialog()
+          this.saveQuestionAnswer(this.alternativeTimeoutCaseValue)
+        }
+      }, 1000)
+    },
+
+    showQuestionTimeoutDialog () {
+      Swal.fire({
+        title: 'Tempo esgotado',
+        text: 'O tempo acabou e você não respondeu a última questão.',
+        icon: 'warning',
+        // showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        // cancelButtonColor: '#d33',
+        confirmButtonText: 'Próxima pergunta',
+        allowOutsideClick: false
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.prepareAndShowNextQuestion()
+        }
+      })
+    },
+
+    getTimeRemainingPercentage () {
+      const secondsRemaining = this.questionTimeLimit - this.questionSecondsElapsed
+      return ((100 * secondsRemaining) / this.questionTimeLimit)
     }
   }
 }
@@ -129,6 +188,15 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.progress {
+  border-radius: 0;
+  height: 0.5em;
+}
+
+.progress-bar {
+  background-color: var(--colorAccent);
 }
 
 </style>

@@ -62,7 +62,7 @@ template<template>
       </template>
 
       <template v-else>
-        <AlternativesManager v-if="isQuizStarted" :quiz="quiz" :correct-quiz-answers="correctQuizAnswers" />
+        <AlternativesManager v-show="isQuizStarted" :quiz="quiz" :correct-quiz-answers="correctQuizAnswers" />
       </template>
 
     </template>
@@ -241,6 +241,12 @@ export default {
 
     showQuestions () {
       this.isQuizStarted = true
+
+      this.$nextTick(() => {
+        setTimeout(() => {
+          this.$bus.$emit('startAnsweringQuiz')
+        }, 50)
+      })
     }
   }
 }

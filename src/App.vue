@@ -10,7 +10,8 @@
 
 <style lang="scss">
 :root {
-  --colorPrimary: #16a085;
+  --colorPrimary: #16A085;
+  --colorAccent: #FF6600;
 }
 
 #app {
