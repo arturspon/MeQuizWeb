@@ -62,7 +62,7 @@ template<template>
       </template>
 
       <template v-else>
-        <AlternativesManager v-if="isQuizStarted" :quiz="quiz" />
+        <AlternativesManager v-if="isQuizStarted" :quiz="quiz" :correct-quiz-answers="correctQuizAnswers" />
       </template>
 
     </template>
@@ -99,6 +99,7 @@ export default {
       quizId: null,
       quiz: null,
       quizImgUrl: null,
+      correctQuizAnswers: null,
 
       quizOwnerUserId: null,
       quizOwnerUser: null,
@@ -124,10 +125,21 @@ export default {
         .get()
       this.quiz = this.quiz.data()
       console.log(this.quiz)
+
       this.quizImgUrl = await this.storageRef
         .root
         .child(`quizzes_banners/${this.quiz.imgName}`)
         .getDownloadURL()
+
+      this.correctQuizAnswers = (await this.db.collection('activeQuizzes')
+        .doc(this.quizOwnerUserId)
+        .collection('userQuizzes')
+        .doc(this.quizId)
+        .get())
+        .data()
+        .correctAnswers
+      this.$store.commit('setQuizCorrectAnswers', this.correctQuizAnswers)
+
       this.isLoading.quiz = false
     },
 
@@ -168,9 +180,9 @@ export default {
               })
               .catch(() => {
                 firebase.auth().signOut().then(() => {
-                  // Sign-out successful.
+                  console.log('Sign-out successful')
                 }).catch(() => {
-                  // An error happened.
+                  console.error('Sign-out error')
                 })
               })
           }
@@ -200,15 +212,35 @@ export default {
 
     beginQuiz () {
       if (this.isLoggedIn) {
-        this.showQuestions()
+        this.createQuizAttempt()
       } else {
         this.signInAnonymously()
       }
     },
 
+    async createQuizAttempt () {
+      const quizAttemptRef = this.db.collection('activeQuizzes')
+        .doc(this.quizOwnerUserId)
+        .collection('userQuizzes')
+        .doc(this.quizId)
+        .collection('attempts')
+        .doc(this.$store.state.user.uid)
+
+      this.$store.commit('setQuizAttemptRef', quizAttemptRef)
+
+      await quizAttemptRef.set({
+        answers: [],
+        numberOfQuestions: this.quiz.questions.length,
+        quizId: this.quizId,
+        rightAnswers: 0,
+        userId: this.$store.state.user.uid
+      }, { merge: true })
+
+      this.showQuestions()
+    },
+
     showQuestions () {
       this.isQuizStarted = true
-      console.log('showing questions')
     }
   }
 }

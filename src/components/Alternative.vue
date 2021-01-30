@@ -1,7 +1,13 @@
 <template>
-  <div>
-    <div>
-      <button class="btn btn-light w-100 mt-3" type="button" v-html="getQuestionText()" />
+  <div class="w-100">
+    <div class="w-100">
+      <button
+        class="btn w-100 mt-3"
+        :class="[isSelected || isHighlighted ? (isCorrect ? 'btn-success' : 'btn-danger') : 'btn-light']"
+        type="button"
+        v-html="getQuestionText()"
+        @click="selectAlternative"
+      />
     </div>
   </div>
 </template>
@@ -12,19 +18,40 @@ export default {
 
   props: {
     index: Number,
-    text: String
+    text: String,
+    isCorrect: Boolean
   },
 
   data () {
     return {
-
+      canClick: true,
+      isSelected: false,
+      isHighlighted: false
     }
+  },
+
+  created () {
+    this.$bus.$on('toggleInteraction', isInteractionAllowed => {
+      this.canClick = isInteractionAllowed
+    })
+    this.$bus.$on('alternativeSelected', alternativeIndex => {
+      if (this.isCorrect) {
+        this.isHighlighted = true
+      }
+    })
   },
 
   methods: {
     getQuestionText () {
       const quizOwnerName = this.$store.state.quizOwnerUser.displayName
       return this.text.replace('%1$s', `<b>${quizOwnerName}</b>`)
+    },
+
+    selectAlternative () {
+      if (this.canClick) {
+        this.isSelected = true
+        this.$bus.$emit('alternativeSelected', this.index)
+      }
     }
   }
 }
