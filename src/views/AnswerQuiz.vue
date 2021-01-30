@@ -1,4 +1,4 @@
-<template>
+template<template>
   <div>
     <div class="loading" v-if="isLoading.quiz || isLoading.getQuizOwnerUser">
       <div>
@@ -9,38 +9,62 @@
       </div>
     </div>
 
-    <template v-else>
-      <div class="banner">
-        <img :src="quizImgUrl" alt="Imagem do Quiz" class="w-100 h-100">
-        <div class="banner__fade">
-          <div class="banner__title pl-2">
-            <h3>{{ quiz ? quiz.name : 'Responder Quiz' }}</h3>
+    <template>
+
+      <template v-if="!isQuizStarted">
+        <div class="banner">
+          <img :src="quizImgUrl" alt="Imagem do Quiz" class="w-100 h-100">
+          <div class="banner__fade">
+            <div class="banner__title pl-2">
+              <h3>{{ quiz ? quiz.name : 'Responder Quiz' }}</h3>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="login mt-2">
-        <div class="my-3 ml-4 mr-4 w-100">
-          <div>
-            <p>
-              <b>{{ quizOwnerUser ? quizOwnerUser.displayName : 'Seu amigo(a)' }}</b>
-              convidou você.
-              <br>
-              Responda esse Quiz sobre ele.
-            </p>
-          </div>
+        <div class="login mt-2">
+          <div class="my-3 ml-4 mr-4 w-100">
+            <div>
+              <p>
+                <b>{{ quizOwnerUser ? quizOwnerUser.displayName : 'Seu amigo(a)' }}</b>
+                convidou você.
+                <br>
+                Responda esse Quiz sobre ele.
+              </p>
+            </div>
 
-          <div class="form-group mt-4">
-            <label>
-              <b>Digite nome ou apelido</b>
-            </label>
-            <input class="form-control" type="text">
+            <template v-if="!isLoggedIn">
+              <div class="form-group mt-4">
+                <label>
+                  <b>Digite nome ou apelido</b>
+                </label>
+                <input v-model="displayName" class="form-control" type="text" maxlength="20">
+              </div>
+            </template>
+
+            <button
+              class="btn btn-primary"
+              type="button"
+              @click="beginQuiz"
+              :disabled="isLoading.accountCreation"
+            >
+              <template v-if="isLoading.accountCreation">
+                <button class="btn btn-primary" type="button" disabled>
+                  <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                  <span class="sr-only">Carregando...</span>
+                </button>
+              </template>
+              <template v-else>
+                Começar a responder
+              </template>
+            </button>
           </div>
-          <button class="btn btn-primary" type="button">
-            Começar a responder
-          </button>
         </div>
-      </div>
+      </template>
+
+      <template v-else>
+        <AlternativesManager v-if="isQuizStarted" :quiz="quiz" />
+      </template>
+
     </template>
 
   </div>
@@ -48,16 +72,26 @@
 
 <script>
 import firebase from '../firebaseConfig'
+import AlternativesManager from '@/components/AlternativesManager'
 
 export default {
   name: 'AnswerQuiz',
+
+  components: {
+    AlternativesManager
+  },
 
   data () {
     return {
       isLoading: {
         quiz: true,
-        quizOwnerUser: true
+        quizOwnerUser: true,
+        loginCheck: true,
+        accountCreation: false
       },
+
+      isLoggedIn: false,
+      isNewUser: false,
 
       db: firebase.firestore(),
       storageRef: firebase.storage().ref(),
@@ -67,15 +101,18 @@ export default {
       quizImgUrl: null,
 
       quizOwnerUserId: null,
-      quizOwnerUser: null
+      quizOwnerUser: null,
+
+      displayName: '',
+
+      isQuizStarted: false
     }
   },
 
   mounted () {
     this.quizId = this.$route.params.quizId
     this.quizOwnerUserId = this.$route.params.userId
-    console.log({ quizId: this.quizId, userId: this.quizOwnerUserId })
-
+    this.authObserver()
     this.getQuiz()
     this.getQuizOwnerUser()
   },
@@ -97,8 +134,81 @@ export default {
     async getQuizOwnerUser () {
       this.quizOwnerUser = await this.db.collection('users').doc(this.quizOwnerUserId).get()
       this.quizOwnerUser = this.quizOwnerUser.data()
-      console.log(this.quizOwnerUser)
+      this.$store.commit('setQuizOwnerUser', this.quizOwnerUser)
       this.isLoading.quizOwnerUser = false
+    },
+
+    authObserver () {
+      firebase.auth().onAuthStateChanged(async (user) => {
+        this.isLoggedIn = !!user
+
+        if (user) {
+          const uid = user.uid
+          this.$store.commit('setUser', user)
+          console.log(uid)
+
+          if (this.isNewUser) {
+            this.isNewUser = false
+            await this.db.collection('users')
+              .doc(uid)
+              .set({
+                userId: uid,
+                anonymous: true,
+                displayName: this.displayName.trim(),
+                email: null,
+                friends: [this.quizOwnerUserId],
+                photoUrl: null
+              })
+            this.showQuestions()
+          } else {
+            await this.db.collection('users')
+              .doc(uid)
+              .update({
+                friends: firebase.firestore.FieldValue.arrayUnion(this.quizOwnerUserId)
+              })
+              .catch(() => {
+                firebase.auth().signOut().then(() => {
+                  // Sign-out successful.
+                }).catch(() => {
+                  // An error happened.
+                })
+              })
+          }
+        }
+
+        this.isLoading.loginCheck = false
+      })
+    },
+
+    signInAnonymously () {
+      this.isLoading.accountCreation = true
+      console.log('Logging in...')
+      firebase.auth().signInAnonymously()
+        .then(() => {
+          this.isNewUser = true
+          console.log('User signed in')
+          this.isLoading.accountCreation = false
+        })
+        .catch((error) => {
+          console.log(error)
+          this.isLoading.accountCreation = false
+          // var errorCode = error.code
+          // var errorMessage = error.message
+          // ...
+        })
+    },
+
+    beginQuiz () {
+      if (this.isLoggedIn) {
+        this.showQuestions()
+      } else {
+        this.signInAnonymously()
+      }
+    },
+
+    showQuestions () {
+      this.isQuizStarted = true
+      console.log('showing questions')
     }
   }
 }
