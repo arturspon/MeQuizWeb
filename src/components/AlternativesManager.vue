@@ -1,7 +1,12 @@
 <template>
   <div>
-    <div class="actionBar py-3 pl-2 pr-2">
-      <b>{{ quiz.name }}</b>
+    <div class="actionBar py-3 pl-3 pr-3">
+      <div class="pt-1">
+        <b>{{ quiz.name }}</b>
+      </div>
+      <div class="pt-1">
+        <b>{{ this.questionTimeLimit - this.questionSecondsElapsed }}''</b>
+      </div>
     </div>
 
     <div class="progress">
@@ -54,6 +59,7 @@ export default {
       quizOwnerName: '',
       alternativeOffset: 0,
       alternativeTimeoutCaseValue: -99,
+      correctAnswersCount: 0,
 
       questionTimeLimit: 20,
       questionInterval: null,
@@ -76,7 +82,6 @@ export default {
         }
       )
       this.$bus.$on('startAnsweringQuiz', () => {
-        console.log('starting')
         this.startQuestionTimer()
       })
     },
@@ -100,7 +105,7 @@ export default {
       for (let index = this.currentQuestionIndex; index < (answerCount + this.currentQuestionIndex); index++) {
         const alternative = this.quiz.answers[aux + alternativeOffset]
         const isAlternativeCorrect =
-          parseInt(this.correctQuizAnswers[this.currentQuestionIndex]) === parseInt(index)
+          parseInt(this.correctQuizAnswers[this.currentQuestionIndex]) === parseInt(aux)
 
         // Vue render :key
         const alternativeTempId = `${this.currentQuestionIndex.toString()}_${index}`
@@ -118,6 +123,12 @@ export default {
     },
 
     prepareAndShowNextQuestion () {
+      const isQuizOver = this.currentQuestionIndex === this.quiz.questions.length - 1
+      if (isQuizOver) {
+        this.showCompletedQuizDialog()
+        return
+      }
+
       this.questionSecondsElapsed = 0
       this.currentQuestionIndex++
       this.$bus.$emit('toggleInteraction', true)
@@ -125,21 +136,25 @@ export default {
     },
 
     async saveQuestionAnswer (alternativeIndex) {
-      this.lastAlternativeSelected = alternativeIndex
       clearInterval(this.questionInterval)
 
-      const updatedAnswers = (await this.$store.state.quizAttemptRef.get()).data().answers
-      updatedAnswers.push(alternativeIndex)
+      const isAlternativeCorrect =
+          parseInt(this.correctQuizAnswers[this.currentQuestionIndex]) === parseInt(alternativeIndex)
+      this.correctAnswersCount += isAlternativeCorrect ? 1 : 0
+
+      const attemp = (await this.$store.state.quizAttemptRef.get()).data()
+      attemp.answers.push(alternativeIndex)
 
       this.$store.state.quizAttemptRef.set({
-        answers: updatedAnswers
+        answers: attemp.answers,
+        rightAnswers: this.correctAnswersCount
       }, { merge: true })
 
       setTimeout(() => {
         if (alternativeIndex !== this.alternativeTimeoutCaseValue) {
           this.prepareAndShowNextQuestion()
         }
-      }, 2500)
+      }, 2000)
     },
 
     startQuestionTimer () {
@@ -170,6 +185,21 @@ export default {
       })
     },
 
+    showCompletedQuizDialog () {
+      Swal.fire({
+        title: 'Quiz finalizado',
+        text: `Você acertou ${this.correctAnswersCount} de ${this.quiz.questions.length}!`,
+        icon: 'success',
+        // showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        // cancelButtonColor: '#d33',
+        confirmButtonText: 'OK',
+        allowOutsideClick: false
+      }).then(() => {
+        location.href = '/'
+      })
+    },
+
     getTimeRemainingPercentage () {
       const secondsRemaining = this.questionTimeLimit - this.questionSecondsElapsed
       return ((100 * secondsRemaining) / this.questionTimeLimit)
@@ -182,6 +212,8 @@ export default {
 
 .actionBar {
   background-color: var(--colorPrimary);
+  display: flex;
+  justify-content: space-between;
 }
 
 .alternatives {

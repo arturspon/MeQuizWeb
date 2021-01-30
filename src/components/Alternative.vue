@@ -45,6 +45,7 @@ export default {
     getQuestionText () {
       const quizOwnerName = this.$store.state.quizOwnerUser.displayName
       return this.text.replace('%1$s', `<b>${quizOwnerName}</b>`)
+      // return this.text.replace(/%1\$s/g, `<b>${quizOwnerName}</b>`)
     },
 
     selectAlternative () {

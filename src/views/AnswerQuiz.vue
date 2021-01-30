@@ -16,7 +16,9 @@ template<template>
           <img :src="quizImgUrl" alt="Imagem do Quiz" class="w-100 h-100">
           <div class="banner__fade">
             <div class="banner__title pl-2">
-              <h3>{{ quiz ? quiz.name : 'Responder Quiz' }}</h3>
+              <h3>
+                <b>{{ quiz ? quiz.name : 'Responder Quiz' }}</b>
+              </h3>
             </div>
           </div>
         </div>
@@ -42,7 +44,7 @@ template<template>
             </template>
 
             <button
-              class="btn btn-primary"
+              class="btn btn-primary btn-lg"
               type="button"
               @click="beginQuiz"
               :disabled="isLoading.accountCreation"
@@ -124,7 +126,6 @@ export default {
         .doc(this.quizId)
         .get()
       this.quiz = this.quiz.data()
-      console.log(this.quiz)
 
       this.quizImgUrl = await this.storageRef
         .root
@@ -157,7 +158,6 @@ export default {
         if (user) {
           const uid = user.uid
           this.$store.commit('setUser', user)
-          console.log(uid)
 
           if (this.isNewUser) {
             this.isNewUser = false
