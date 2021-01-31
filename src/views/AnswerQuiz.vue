@@ -1,73 +1,88 @@
 template<template>
-  <div>
-    <div class="loading" v-if="isLoading.quiz || isLoading.getQuizOwnerUser">
-      <div>
-        <div class="spinner-border text-white" style="width: 3rem; height: 3rem;" role="status">
-          <span class="sr-only">Carregando...</span>
+  <div class="custom-container">
+    <transition name="fade">
+      <div class="loading" v-if="isLoading.quiz || isLoading.getQuizOwnerUser">
+        <div>
+          <div class="spinner-border text-white" style="width: 3rem; height: 3rem;" role="status">
+            <span class="sr-only">Carregando...</span>
+          </div>
+          <p><b>Caregando Quiz...</b></p>
         </div>
-        <p><b>Caregando Quiz...</b></p>
       </div>
-    </div>
+    </transition>
 
-    <template>
-
-      <template v-if="!isQuizStarted">
-        <div class="banner">
-          <img :src="quizImgUrl" alt="Imagem do Quiz" class="w-100 h-100">
-          <div class="banner__fade">
-            <div class="banner__title pl-2">
-              <h3>
-                <b>{{ quiz ? quiz.name : 'Responder Quiz' }}</b>
-              </h3>
-            </div>
-          </div>
+    <transition name="fade">
+      <div v-if="errors.length > 0" class="errors">
+        <div class="alert alert-danger" role="alert">
+          <span v-for="error in errors" :key="error">
+            {{ error }}
+            <br>
+          </span>
         </div>
+      </div>
+    </transition>
 
-        <div class="login mt-2">
-          <div class="my-3 ml-4 mr-4 w-100">
-            <div>
-              <p>
-                <b>{{ quizOwnerUser ? quizOwnerUser.displayName : 'Seu amigo(a)' }}</b>
-                convidou você.
-                <br>
-                Responda esse Quiz sobre ele.
-              </p>
-            </div>
+    <!-- <transition name="fade"> -->
+      <template v-if="errors.length == 0 && !isLoading.quiz && !isLoading.getQuizOwnerUser">
 
-            <template v-if="!isLoggedIn">
-              <div class="form-group mt-4">
-                <label>
-                  <b>Digite nome ou apelido</b>
-                </label>
-                <input v-model="displayName" class="form-control" type="text" maxlength="20">
+        <template v-if="!isQuizStarted">
+          <div class="banner">
+            <img :src="quizImgUrl" alt="Imagem do Quiz" class="w-100 h-100">
+            <div class="banner__fade">
+              <div class="banner__title pl-2">
+                <h3>
+                  <b>{{ quiz ? quiz.name : 'Responder Quiz' }}</b>
+                </h3>
               </div>
-            </template>
-
-            <button
-              class="btn btn-primary btn-lg"
-              type="button"
-              @click="beginQuiz"
-              :disabled="isLoading.accountCreation"
-            >
-              <template v-if="isLoading.accountCreation">
-                <button class="btn btn-primary" type="button" disabled>
-                  <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                  <span class="sr-only">Carregando...</span>
-                </button>
-              </template>
-              <template v-else>
-                Começar a responder
-              </template>
-            </button>
+            </div>
           </div>
-        </div>
-      </template>
 
-      <template v-else>
-        <AlternativesManager v-show="isQuizStarted" :quiz="quiz" :correct-quiz-answers="correctQuizAnswers" />
-      </template>
+          <div class="login mt-2">
+            <div class="my-3 ml-4 mr-4 w-100">
+              <div>
+                <p>
+                  <b>{{ quizOwnerUser ? quizOwnerUser.displayName : 'Seu amigo(a)' }}</b>
+                  convidou você.
+                  <br>
+                  Responda esse Quiz sobre ele.
+                </p>
+              </div>
 
-    </template>
+              <template v-if="!isLoggedIn">
+                <div class="form-group mt-4">
+                  <label>
+                    <b>Digite nome ou apelido</b>
+                  </label>
+                  <input v-model="displayName" class="form-control" type="text" maxlength="20">
+                </div>
+              </template>
+
+              <button
+                class="btn btn-primary btn-lg"
+                type="button"
+                @click="beginQuiz"
+                :disabled="isLoading.accountCreation"
+              >
+                <template v-if="isLoading.accountCreation">
+                  <button class="btn btn-primary" type="button" disabled>
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span class="sr-only">Carregando...</span>
+                  </button>
+                </template>
+                <template v-else>
+                  Começar a responder
+                </template>
+              </button>
+            </div>
+          </div>
+        </template>
+
+        <template v-else>
+          <AlternativesManager v-show="isQuizStarted" :quiz="quiz" :correct-quiz-answers="correctQuizAnswers" />
+        </template>
+
+      </template>
+    <!-- </transition> -->
 
   </div>
 </template>
@@ -91,6 +106,8 @@ export default {
         loginCheck: true,
         accountCreation: false
       },
+
+      errors: [],
 
       isLoggedIn: false,
       isNewUser: false,
@@ -125,6 +142,13 @@ export default {
       this.quiz = await this.db.collection('quizzes')
         .doc(this.quizId)
         .get()
+
+      if (!this.quiz.exists) {
+        this.setInvalidLinkError()
+        this.isLoading.quiz = false
+        return
+      }
+
       this.quiz = this.quiz.data()
 
       this.quizImgUrl = await this.storageRef
@@ -132,13 +156,19 @@ export default {
         .child(`quizzes_banners/${this.quiz.imgName}`)
         .getDownloadURL()
 
-      this.correctQuizAnswers = (await this.db.collection('activeQuizzes')
+      this.correctQuizAnswers = await this.db.collection('activeQuizzes')
         .doc(this.quizOwnerUserId)
         .collection('userQuizzes')
         .doc(this.quizId)
-        .get())
-        .data()
-        .correctAnswers
+        .get()
+
+      if (!this.correctQuizAnswers.exists) {
+        this.setInvalidLinkError()
+        this.isLoading.quiz = false
+        return
+      }
+
+      this.correctQuizAnswers = this.correctQuizAnswers.data().correctAnswers
       this.$store.commit('setQuizCorrectAnswers', this.correctQuizAnswers)
 
       this.isLoading.quiz = false
@@ -146,6 +176,13 @@ export default {
 
     async getQuizOwnerUser () {
       this.quizOwnerUser = await this.db.collection('users').doc(this.quizOwnerUserId).get()
+
+      if (!this.quizOwnerUser.exists) {
+        this.setInvalidLinkError()
+        this.isLoading.quizOwnerUser = false
+        return
+      }
+
       this.quizOwnerUser = this.quizOwnerUser.data()
       this.$store.commit('setQuizOwnerUser', this.quizOwnerUser)
       this.isLoading.quizOwnerUser = false
@@ -247,12 +284,31 @@ export default {
           this.$bus.$emit('startAnsweringQuiz')
         }, 50)
       })
+    },
+
+    setInvalidLinkError () {
+      this.errors = [
+        'Desculpe, este link é inválido.',
+        'Peça para seu amigo lhe enviar o link novamente via WhatsApp.'
+      ]
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
+
+@media only screen and (min-width: 992px) {
+  .custom-container {
+    max-width: 960px;
+    width: 100%;
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-right: auto;
+    margin-left: auto;
+  }
+}
+
 .loading {
   display: flex;
   justify-content: center;
@@ -291,5 +347,19 @@ export default {
 
 input {
   text-align: center;
+}
+
+.errors {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity .5s;
+}
+.fade-enter, .fade-leave-to {
+  opacity: 0;
 }
 </style>
