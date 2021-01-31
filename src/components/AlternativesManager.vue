@@ -22,7 +22,11 @@
 
     <div class="my-3 ml-3 mr-3">
 
-      <div class="question bg-white rounded text-dark py-5 pl-1 pr-1" v-html="getQuestionText()">
+      <div class="question bg-white rounded text-dark py-5 pl-1 pr-1">
+        <small class="text-muted">
+          Questão {{ currentQuestionIndex + 1 }} de {{ quiz.questions.length }}
+        </small>
+        <div v-html="getQuestionText()"></div>
       </div>
 
       <div class="alternatives mt-5">
@@ -57,7 +61,6 @@ export default {
     return {
       currentQuestionIndex: 0,
       quizOwnerName: '',
-      alternativeOffset: 0,
       alternativeTimeoutCaseValue: -99,
       correctAnswersCount: 0,
 
@@ -83,7 +86,21 @@ export default {
       )
       this.$bus.$on('startAnsweringQuiz', () => {
         this.startQuestionTimer()
+        this.checkForExistingAttempt()
       })
+    },
+
+    async checkForExistingAttempt () {
+      const attempt = await this.$store.state.quizAttemptRef.get()
+      if (attempt.exists) {
+        const data = attempt.data()
+
+        this.currentQuestionIndex = data.answers.length - 1
+        this.correctAnswersCount = data.rightAnswers
+
+        clearInterval(this.questionInterval)
+        this.prepareAndShowNextQuestion()
+      }
     },
 
     getQuestionText () {

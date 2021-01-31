@@ -208,7 +208,7 @@ export default {
                 friends: [this.quizOwnerUserId],
                 photoUrl: null
               })
-            this.showQuestions()
+            this.beginQuiz()
           } else {
             await this.db.collection('users')
               .doc(uid)
@@ -265,13 +265,16 @@ export default {
 
       this.$store.commit('setQuizAttemptRef', quizAttemptRef)
 
-      await quizAttemptRef.set({
-        answers: [],
-        numberOfQuestions: this.quiz.questions.length,
-        quizId: this.quizId,
-        rightAnswers: 0,
-        userId: this.$store.state.user.uid
-      }, { merge: true })
+      const existingAttempt = await quizAttemptRef.get()
+      if (!existingAttempt.exists) {
+        await quizAttemptRef.set({
+          answers: [],
+          numberOfQuestions: this.quiz.questions.length,
+          quizId: this.quizId,
+          rightAnswers: 0,
+          userId: this.$store.state.user.uid
+        }, { merge: true })
+      }
 
       this.showQuestions()
     },
