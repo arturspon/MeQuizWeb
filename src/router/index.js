@@ -2,6 +2,8 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Home from '../views/Home.vue'
 import AnswerQuiz from '../views/AnswerQuiz.vue'
+import PrivacyPolicy from '../views/PrivacyPolicy.vue'
+import Terms from '../views/Terms.vue'
 
 Vue.use(VueRouter)
 
@@ -23,6 +25,16 @@ const routes = [
     path: '/answer/:userId/:quizId',
     name: 'AnswerQuiz',
     component: AnswerQuiz
+  },
+  {
+    path: '/terms_and_conditions',
+    name: 'Terms',
+    component: Terms
+  },
+  {
+    path: '/privacy_policy',
+    name: 'PrivacyPolicy',
+    component: PrivacyPolicy
   }
 ]
 
