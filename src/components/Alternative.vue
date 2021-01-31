@@ -8,6 +8,9 @@
         v-html="getQuestionText()"
         @click="selectAlternative"
       />
+
+      <audio ref="successSound" src="@/assets/sounds/snd_sucess.mp3"></audio>
+      <audio ref="errorSound" src="@/assets/sounds/snd_error.wav"></audio>
     </div>
   </div>
 </template>
@@ -51,6 +54,8 @@ export default {
     selectAlternative () {
       if (this.canClick) {
         this.isSelected = true
+        this.isCorrect ? this.$refs.successSound.play() : this.$refs.errorSound.play()
+
         this.$bus.$emit('alternativeSelected', this.index)
       }
     }

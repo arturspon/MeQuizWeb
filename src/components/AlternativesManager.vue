@@ -18,7 +18,9 @@
           <b>{{ quiz.name }}</b>
         </div>
         <div class="pt-1">
-          <b>{{ this.questionTimeLimit - this.questionSecondsElapsed }}''</b>
+          <b :class="countdownTextClass">
+            {{ this.questionTimeLimit - this.questionSecondsElapsed }}''
+          </b>
         </div>
       </div>
 
@@ -53,6 +55,7 @@
 
     </template>
 
+    <audio ref="clockSound" src="@/assets/sounds/bip.wav"></audio>
   </div>
 </template>
 
@@ -77,6 +80,8 @@ export default {
       isLoading: {
         quizAttemptCheck: false
       },
+
+      countdownTextClass: '',
 
       currentQuestionIndex: 0,
       quizOwnerName: '',
@@ -164,6 +169,9 @@ export default {
     },
 
     prepareAndShowNextQuestion () {
+      this.toggleClockSound(false)
+      this.countdownTextClass = ''
+
       const isQuizOver = this.currentQuestionIndex === this.quiz.questions.length - 1
       if (isQuizOver) {
         this.showCompletedQuizDialog()
@@ -201,12 +209,28 @@ export default {
     startQuestionTimer () {
       this.questionInterval = setInterval(() => {
         this.questionSecondsElapsed++
+
         if (this.questionSecondsElapsed >= this.questionTimeLimit) {
+          this.countdownTextClass = ''
+          this.toggleClockSound(false)
           clearInterval(this.questionInterval)
           this.showQuestionTimeoutDialog()
           this.saveQuestionAnswer(this.alternativeTimeoutCaseValue)
+        } else if (this.questionTimeLimit - this.questionSecondsElapsed < 10) {
+          this.toggleClockSound(true)
+          this.countdownTextClass = this.questionTimeLimit - this.questionSecondsElapsed <= 5
+            ? 'text-danger blink' : 'text-warning'
         }
       }, 1000)
+    },
+
+    toggleClockSound (play) {
+      if (play) {
+        this.$refs.clockSound.play()
+      } else {
+        this.$refs.clockSound.pause()
+        this.$refs.clockSound.currentTime = 0
+      }
     },
 
     showQuestionTimeoutDialog () {
@@ -270,6 +294,16 @@ export default {
 
 .progress-bar {
   background-color: var(--colorAccent);
+}
+
+.blink {
+  animation: blinker 0.25s step-start infinite;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
 }
 
 </style>
