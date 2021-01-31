@@ -1,43 +1,58 @@
 <template>
-  <div>
-    <div class="actionBar py-3 pl-3 pr-3">
-      <div class="pt-1">
-        <b>{{ quiz.name }}</b>
+  <div class="h-100">
+    <transition name="fade">
+      <div class="d-flex justify-content-center align-items-center h-100" v-if="isLoading.quizAttemptCheck">
+        <div>
+          <div class="spinner-border text-white" style="width: 3rem; height: 3rem;" role="status">
+            <span class="sr-only">Carregando...</span>
+          </div>
+          <p><b>Só um segundo...</b></p>
+        </div>
       </div>
-      <div class="pt-1">
-        <b>{{ this.questionTimeLimit - this.questionSecondsElapsed }}''</b>
-      </div>
-    </div>
+    </transition>
 
-    <div class="progress">
-      <div
-        class="progress-bar"
-        role="progressbar"
-        :style="`width: ${getTimeRemainingPercentage()}%`"
-        :aria-valuenow="getTimeRemainingPercentage()"
-        aria-valuemin="0"
-        aria-valuemax="100">
-      </div>
-    </div>
+    <template v-if="!isLoading.quizAttemptCheck">
 
-    <div class="my-3 ml-3 mr-3">
-
-      <div class="question bg-white rounded text-dark py-5 pl-1 pr-1">
-        <small class="text-muted">
-          Questão {{ currentQuestionIndex + 1 }} de {{ quiz.questions.length }}
-        </small>
-        <div v-html="getQuestionText()"></div>
+      <div class="actionBar py-3 pl-3 pr-3">
+        <div class="pt-1">
+          <b>{{ quiz.name }}</b>
+        </div>
+        <div class="pt-1">
+          <b>{{ this.questionTimeLimit - this.questionSecondsElapsed }}''</b>
+        </div>
       </div>
 
-      <div class="alternatives mt-5">
-        <div class="w-100">
-          <div v-for="(alternative, index) in getAlternatives()" :key="alternative.tempId">
-            <Alternative :index="index" :text="alternative.text" :isCorrect="alternative.isCorrect" />
+      <div class="progress">
+        <div
+          class="progress-bar"
+          role="progressbar"
+          :style="`width: ${getTimeRemainingPercentage()}%`"
+          :aria-valuenow="getTimeRemainingPercentage()"
+          aria-valuemin="0"
+          aria-valuemax="100">
+        </div>
+      </div>
+
+      <div class="my-3 ml-3 mr-3">
+
+        <div class="question bg-white rounded text-dark py-5 pl-1 pr-1">
+          <small class="text-muted">
+            Questão {{ currentQuestionIndex + 1 }} de {{ quiz.questions.length }}
+          </small>
+          <div v-html="getQuestionText()"></div>
+        </div>
+
+        <div class="alternatives mt-5">
+          <div class="w-100">
+            <div v-for="(alternative, index) in getAlternatives()" :key="alternative.tempId">
+              <Alternative :index="index" :text="alternative.text" :isCorrect="alternative.isCorrect" />
+            </div>
           </div>
         </div>
       </div>
 
-    </div>
+    </template>
+
   </div>
 </template>
 
@@ -59,6 +74,10 @@ export default {
 
   data () {
     return {
+      isLoading: {
+        quizAttemptCheck: false
+      },
+
       currentQuestionIndex: 0,
       quizOwnerName: '',
       alternativeTimeoutCaseValue: -99,
@@ -85,12 +104,13 @@ export default {
         }
       )
       this.$bus.$on('startAnsweringQuiz', () => {
-        this.startQuestionTimer()
         this.checkForExistingAttempt()
       })
     },
 
     async checkForExistingAttempt () {
+      this.isLoading.quizAttemptCheck = true
+
       const attempt = await this.$store.state.quizAttemptRef.get()
       if (attempt.exists) {
         const data = attempt.data()
@@ -100,7 +120,11 @@ export default {
 
         clearInterval(this.questionInterval)
         this.prepareAndShowNextQuestion()
+      } else {
+        this.startQuestionTimer()
       }
+
+      this.isLoading.quizAttemptCheck = false
     },
 
     getQuestionText () {

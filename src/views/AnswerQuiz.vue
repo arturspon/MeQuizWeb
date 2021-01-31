@@ -1,5 +1,5 @@
 template<template>
-  <div class="custom-container">
+  <div class="custom-container h-100">
     <transition name="fade">
       <div class="loading" v-if="isLoading.quiz || isLoading.getQuizOwnerUser">
         <div>
