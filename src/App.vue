@@ -20,13 +20,13 @@
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: white;
-  background-color: rgba(0, 0, 0, 0.5);
-  height: 100vh;
+  // background-color: rgba(0, 0, 0, 0.5);
+  // height: 100vh;
 }
 
 body {
-  background-color: #3D454E;
-  background-image: url(assets/images/bg.png);
-  background-size: 128px;
+  background-color: #3E454D;
+  // background-image: url(assets/images/bg.png);
+  // background-size: 128px;
 }
 </style>
