@@ -24,9 +24,9 @@
                 <a class="nav-link" href="#">Amigos</a>
               </li>
 
-              <li class="nav-item" :class="{'active': activeLink == PROFILE_LINK}">
+              <router-link to="/profile" class="nav-item" :class="{'active': activeLink == PROFILE_LINK}">
                 <a class="nav-link" href="#">Meu perfil</a>
-              </li>
+              </router-link>
 
               <li class="nav-item">
                 <a class="nav-link" href="#" @click="logout()">Sair</a>

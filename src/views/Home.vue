@@ -6,7 +6,7 @@
 
       <div v-if="isLoading.quizzes" class="text-center mt-4">
         <div class="spinner-border text-success" style="width: 3rem; height: 3rem;" role="status">
-          <span class="sr-only">Loading...</span>
+          <span class="sr-only">Carregando...</span>
         </div>
       </div>
 

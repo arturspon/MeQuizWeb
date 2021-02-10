@@ -4,6 +4,8 @@ import Home from '../views/Home.vue'
 import AnswerQuiz from '../views/AnswerQuiz.vue'
 import PrivacyPolicy from '../views/PrivacyPolicy.vue'
 import Terms from '../views/Terms.vue'
+import DoQuiz from '../views/DoQuiz.vue'
+import Profile from '../views/Profile.vue'
 
 Vue.use(VueRouter)
 
@@ -25,6 +27,16 @@ const routes = [
     path: '/answer/:userId/:quizId',
     name: 'AnswerQuiz',
     component: AnswerQuiz
+  },
+  {
+    path: '/do-quiz/:quizId',
+    name: 'DoQuiz',
+    component: DoQuiz
+  },
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: Profile
   },
   {
     path: '/terms_and_conditions',

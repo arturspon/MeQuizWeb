@@ -296,6 +296,10 @@ export default {
   background-color: var(--colorAccent);
 }
 
+.question {
+  border: 4px solid var(--colorPrimary);
+}
+
 .blink {
   animation: blinker 0.25s step-start infinite;
 }
