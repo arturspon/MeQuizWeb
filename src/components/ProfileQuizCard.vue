@@ -20,7 +20,9 @@
                 </small>
               </div>
               <div>
-                <button class="btn btn-info btn-sm mt-2">Compartilhar</button>
+                <a class="btn btn-info btn-sm mt-2" :href="getWhatsAppLink()" target="_blank">
+                  Compartilhar
+                </a>
               </div>
             </div>
 
@@ -154,6 +156,13 @@ export default {
 
     getAttemptPercentage (attempt) {
       return Math.ceil((attempt.rightAnswers * 100) / attempt.numberOfQuestions)
+    },
+
+    getWhatsAppLink () {
+      const url = `https://mequiz.app/answer/${this.$store.state.user.uid}/${this.quiz.id}`
+      let message = `Eu fiz o quiz "${this.quiz.name}"\nVocê consegue adivinhar minhas respostas?\n${url}`
+      message = encodeURIComponent(message)
+      return `https://api.whatsapp.com/send?text=${message}`
     }
   }
 }
