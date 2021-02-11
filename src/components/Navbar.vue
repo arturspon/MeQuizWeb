@@ -14,9 +14,9 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav mr-auto">
 
-            <li class="nav-item" :class="{'active': activeLink == HOME_LINK}">
-              <a class="nav-link" href="#">Quizzes <span class="sr-only">(current)</span></a>
-            </li>
+            <router-link to="/" class="nav-item" :class="{'active': activeLink == HOME_LINK}">
+              <a class="nav-link" href="#">Quizzes</a>
+            </router-link>
 
             <template v-if="isLoggedIn">
 
