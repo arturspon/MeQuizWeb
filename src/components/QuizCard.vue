@@ -4,8 +4,11 @@
     <div class="card-body">
       <h5 class="card-title">{{ quiz.name }}</h5>
       <p class="card-text">{{ quiz.description }}</p>
-      <!-- <a href="#" class="btn btn-primary">Fazer quiz</a> -->
-      <router-link :to="{ name: 'DoQuiz', params: { quizId: quiz.id }}" class="btn btn-outline-success w-100">
+
+      <button v-if="isLoggedIn" class="btn btn-outline-success w-100" @click="showLoginDialog()">
+        Fazer quiz
+      </button>
+      <router-link v-else :to="{ name: 'DoQuiz', params: { quizId: quiz.id }}" class="btn btn-outline-success w-100">
         Fazer quiz
       </router-link>
     </div>
@@ -14,6 +17,7 @@
 
 <script>
 import firebase from '../firebaseConfig'
+import Swal from 'sweetalert2'
 
 export default {
   name: 'QuizCard',
@@ -25,12 +29,14 @@ export default {
   data () {
     return {
       storageRef: firebase.storage().ref(),
-      quizImgUrl: ''
+      quizImgUrl: '',
+      isLoggedIn: false
     }
   },
 
   created () {
     this.fetchImage()
+    this.isLoggedIn = !!this.$store.state.user
   },
 
   methods: {
@@ -39,6 +45,31 @@ export default {
         .root
         .child(`quizzes_banners/${this.quiz.imgName}`)
         .getDownloadURL()
+    },
+
+    showLoginDialog () {
+      Swal.fire(
+        'Efetue login',
+        'Faça login para fazer seu quiz',
+        'warning'
+      )
+      Swal.fire({
+        title: 'Efetue login',
+        text: 'Faça login para fazer seu quiz',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Efetuar login'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          Swal.fire(
+            'Deleted!',
+            'Your file has been deleted.',
+            'success'
+          )
+        }
+      })
     }
   }
 }

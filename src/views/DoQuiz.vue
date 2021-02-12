@@ -10,9 +10,9 @@
         </div>
       </div>
 
-      <div v-if="!isLoading.quiz">
+      <div v-if="!isLoading.quiz && !isLoading.activeQuizCheck">
 
-        <template v-if="this.answers.length < this.quiz.questions.length">
+        <template v-if="!isQuizAlreadyAnswered && this.answers.length < this.quiz.questions.length">
 
           <div class="d-flex justify-content-center">
             <div class="question bg-white rounded text-dark text-center py-5 pl-1 pr-1">
@@ -39,6 +39,19 @@
           </div>
 
         </template>
+
+        <div v-if="isQuizAlreadyAnswered">
+          <div class="alert alert-info" role="alert">
+            <p>Você já fez esse quiz 😎</p>
+
+            <router-link to="/" class="btn btn-primary mr-1">
+              Voltar
+            </router-link>
+            <router-link to="/profile" class="btn btn-success">
+              Ver meus quizzes feitos
+            </router-link>
+          </div>
+        </div>
 
         <!-- <div v-if="this.answers.length === this.quiz.questions.length">
           <div v-for="(question, index) in quiz.questions" :key="index" class="bg-info rounded py-3 mb-2">
@@ -75,11 +88,13 @@ export default {
 
       isLoading: {
         quiz: true,
-        quizCreation: false
+        quizCreation: false,
+        activeQuizCheck: true
       },
 
       quizId: null,
       quiz: null,
+      isQuizAlreadyAnswered: false,
 
       questionIndex: 0,
       answers: []
@@ -87,7 +102,10 @@ export default {
   },
 
   created () {
+    this.quizId = this.$route.params.quizId
     this.getQuiz()
+    this.checkQuizAlreadyAnswered()
+
     this.$bus.$on(
       'alternativeSelected',
       alternativeIndex => {
@@ -112,10 +130,20 @@ export default {
 
   methods: {
     async getQuiz () {
-      this.quizId = this.$route.params.quizId
       this.quiz = await this.db.collection('quizzes').doc(this.quizId).get()
       this.quiz = this.quiz.data()
       this.isLoading.quiz = false
+    },
+
+    async checkQuizAlreadyAnswered () {
+      const activeQuiz = await this.db.collection('activeQuizzes')
+        .doc(this.$store.state.user.uid)
+        .collection('userQuizzes')
+        .doc(this.quizId)
+        .get()
+
+      this.isQuizAlreadyAnswered = activeQuiz.exists
+      this.isLoading.activeQuizCheck = false
     },
 
     getQuestionText (index) {

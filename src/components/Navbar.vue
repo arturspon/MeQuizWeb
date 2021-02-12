@@ -20,9 +20,9 @@
 
             <template v-if="isLoggedIn">
 
-              <li class="nav-item" :class="{'active': activeLink == FRIENDS_LINK}">
+              <!-- <li class="nav-item" :class="{'active': activeLink == FRIENDS_LINK}">
                 <a class="nav-link" href="#">Amigos</a>
-              </li>
+              </li> -->
 
               <router-link to="/profile" class="nav-item" :class="{'active': activeLink == PROFILE_LINK}">
                 <a class="nav-link" href="#">Meu perfil</a>
@@ -43,16 +43,16 @@
 
             <li class="nav-item ml-2">
               <a class="btn btn-outline-warning" href="https://mequiz.page.link/baixar-app" target="_blank">
-                Baixar app
+                Baixar app na Play Store
               </a>
             </li>
 
           </ul>
 
-          <form class="form-inline">
-            <input class="form-control mr-sm-2" type="search" placeholder="Procurar quiz..." aria-label="Search">
-            <button class="btn btn-outline-light my-2 my-sm-0" type="submit">Procurar</button>
-          </form>
+          <!-- <form class="form-inline"> -->
+            <!-- <input v-if="activeLink == HOME_LINK" class="form-control mr-sm-2" type="search" placeholder="Procurar quiz..." aria-label="Search"> -->
+            <!-- <button class="btn btn-outline-light my-2 my-sm-0" type="submit">Procurar</button> -->
+          <!-- </form> -->
         </div>
       </div>
     </nav>
@@ -120,7 +120,6 @@ export default {
     authObserver () {
       firebase.auth().onAuthStateChanged(async (user) => {
         this.isLoggedIn = !!user
-        console.log({ isLoggedIn: this.isLoggedIn })
 
         if (user) {
           // const uid = user.uid
@@ -163,8 +162,9 @@ export default {
 
     logout () {
       firebase.auth().signOut().then(() => {
-        console.log('Sign-out successful')
+        // console.log('Sign-out successful')
         this.isLoggedIn = false
+        this.$store.commit('setUser', null)
       }).catch(() => {
         console.error('Sign-out error')
       })
