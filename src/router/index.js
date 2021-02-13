@@ -47,6 +47,10 @@ const routes = [
     path: '/privacy_policy',
     name: 'PrivacyPolicy',
     component: PrivacyPolicy
+  },
+  {
+    path: '*',
+    component: Home
   }
 ]
 
