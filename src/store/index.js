@@ -32,7 +32,8 @@ export default new Vuex.Store({
     getLongLink (context, data) {
       return new Promise((resolve, reject) => {
         const link = `https://mequiz.app/answer/${data.userId}/${data.quizId}`
-        resolve(`https://mequiz.page.link/?link=${link}&apn=net.ddns.artspon.mequiz`)
+        resolve(link)
+        // resolve(`https://mequiz.page.link/?link=${link}&apn=net.ddns.artspon.mequiz`)
       })
     },
     getShortLink (context, url) {
@@ -46,7 +47,7 @@ export default new Vuex.Store({
             },
             body: JSON.stringify({
               dynamicLinkInfo: {
-                domainUriPrefix: 'https://mequiz.page.link',
+                domainUriPrefix: 'https://mequiz.app/invite',
                 link: url,
                 androidInfo: {
                   androidPackageName: 'net.ddns.artspon.mequiz'
