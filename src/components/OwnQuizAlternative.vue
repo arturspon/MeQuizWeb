@@ -2,7 +2,7 @@
   <div class="w-100">
     <div class="w-100">
       <button
-        class="btn w-75 mt-3"
+        class="btn w-100 mt-3"
         :class="[isSelected || isHighlighted ? 'btn-info' : 'btn-light']"
         type="button"
         v-html="getQuestionText()"

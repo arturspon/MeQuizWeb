@@ -97,9 +97,11 @@ export default {
           console.log(token)
           var user = result.user
           this.$store.commit('setUser', user)
-          console.log(user)
+
+          localStorage.setItem('uid', user.uid)
         }).catch((error) => {
           console.log(error)
+          localStorage.setItem('uid', null)
           // Handle Errors here.
           // var errorCode = error.code
           // var errorMessage = error.message
@@ -117,6 +119,7 @@ export default {
 
         if (user) {
           this.$store.commit('setUser', user)
+          localStorage.setItem('uid', user.uid)
           this.isLoggedIn = true
 
           if (this.$store.state.redirectUrl) {
@@ -130,6 +133,7 @@ export default {
           }
         } else {
           this.$store.commit('setUser', null)
+          localStorage.setItem('uid', null)
         }
 
         this.$forceUpdate()
@@ -142,6 +146,7 @@ export default {
       firebase.auth().signOut().then(() => {
         this.isLoggedIn = false
         this.$store.commit('setUser', null)
+        localStorage.setItem('uid', null)
 
         setTimeout(() => {
           location.reload()

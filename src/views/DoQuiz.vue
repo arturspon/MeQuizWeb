@@ -15,7 +15,7 @@
         <template v-if="!isQuizAlreadyAnswered && this.answers.length < this.quiz.questions.length">
 
           <div class="d-flex justify-content-center">
-            <div class="question bg-white rounded text-dark text-center py-5 pl-1 pr-1">
+            <div class="question bg-white rounded text-dark text-center py-5 pl-1 pr-1 w-100">
                 <small class="text-muted">
                   Questão {{ questionIndex + 1 }} de {{ quiz.questions.length }}
                 </small>
@@ -30,7 +30,7 @@
             </div>
           </div>
 
-          <div class="alternatives mt-1">
+          <div class="alternatives mt-1 w-100">
             <div class="w-100">
               <div v-for="(alternative, index) in getAlternatives()" :key="alternative.tempId">
                 <OwnQuizAlternative :index="index" :text="alternative.text" :isOwnQuiz="true" />
@@ -44,11 +44,17 @@
           <div class="alert alert-info py-5" role="alert">
             <p>Você já fez esse quiz 😎</p>
 
-            <router-link to="/" class="btn btn-primary mr-1">
+            <div>
+              <a class="btn btn-info mr-1" :href="getWhatsAppLink()" target="_blank">
+                Compartilhar
+              </a>
+              <router-link to="/profile" class="btn btn-success">
+                Ver meus quizzes feitos
+              </router-link>
+            </div>
+
+            <router-link to="/" class="btn btn-outline-dark mt-2">
               Voltar
-            </router-link>
-            <router-link to="/profile" class="btn btn-success">
-              Ver meus quizzes feitos
             </router-link>
           </div>
         </div>
@@ -92,6 +98,7 @@ export default {
         activeQuizCheck: true
       },
 
+      userId: null,
       quizId: null,
       quiz: null,
       isQuizAlreadyAnswered: false,
@@ -102,6 +109,7 @@ export default {
   },
 
   created () {
+    this.userId = localStorage.getItem('uid')
     this.quizId = this.$route.params.quizId
     this.getQuiz()
     this.checkQuizAlreadyAnswered()
@@ -111,12 +119,13 @@ export default {
       alternativeIndex => {
         this.$bus.$emit('toggleInteraction', false)
         setTimeout(() => {
+          this.$bus.$emit('toggleInteraction', true)
+          this.answers[this.questionIndex] = alternativeIndex
+
           if (this.quiz.questions[this.questionIndex + 1]) {
             this.questionIndex++
           }
 
-          this.$bus.$emit('toggleInteraction', true)
-          this.answers[this.questionIndex] = alternativeIndex
           this.$forceUpdate()
 
           const isFinished = this.answers.length === this.quiz.questions.length
@@ -137,7 +146,7 @@ export default {
 
     async checkQuizAlreadyAnswered () {
       const activeQuiz = await this.db.collection('activeQuizzes')
-        .doc(this.$store.state.user.uid)
+        .doc(this.userId)
         .collection('userQuizzes')
         .doc(this.quizId)
         .get()
@@ -196,11 +205,11 @@ export default {
       this.isLoading.quizCreation = true
 
       await this.db.collection('activeQuizzes')
-        .doc(this.$store.state.user.uid)
+        .doc(this.userId)
         .collection('userQuizzes')
         .doc(this.quizId)
         .set({
-          userId: this.$store.state.user.uid,
+          userId: this.userId,
           quizId: this.quizId,
           name: this.quiz.name,
           date: firebase.firestore.FieldValue.serverTimestamp(),
@@ -208,6 +217,14 @@ export default {
         })
 
       this.isLoading.quizCreation = false
+      this.isQuizAlreadyAnswered = true
+    },
+
+    getWhatsAppLink () {
+      const url = `https://mequiz.app/answer/${this.userId}/${this.quizId}`
+      let message = `Eu fiz o quiz "${this.quiz.name}"\nVocê consegue adivinhar minhas respostas?\n${url}`
+      message = encodeURIComponent(message)
+      return `https://api.whatsapp.com/send?text=${message}`
     }
   }
 }
