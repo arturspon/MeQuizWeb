@@ -1,5 +1,7 @@
 template<template>
   <div class="custom-container h-100">
+    <Navbar v-show="false" :active-link="'home'" />
+
     <transition name="fade">
       <div class="loading" v-if="isLoading.quiz || isLoading.getQuizOwnerUser">
         <div>
@@ -22,8 +24,20 @@ template<template>
       </div>
     </transition>
 
+    <div v-if="isUserOwnQuiz()" class="errors">
+      <div class="alert alert-warning" role="alert">
+        <p>
+          Oops, este quiz é seu!
+          Somente seus amigos podem responder seu quiz 🙈
+        </p>
+        <router-link to="/profile" class="btn btn-success">
+          Ver meus quizzes
+        </router-link>
+      </div>
+    </div>
+
     <!-- <transition name="fade"> -->
-      <template v-if="errors.length == 0 && !isLoading.quiz && !isLoading.getQuizOwnerUser">
+      <template v-if="!isUserOwnQuiz() && errors.length == 0 && !isLoading.quiz && !isLoading.getQuizOwnerUser">
 
         <template v-if="!isQuizStarted">
           <div class="banner">
@@ -49,15 +63,49 @@ template<template>
               </div>
 
               <template v-if="!isLoggedIn">
-                <div class="form-group mt-4">
+                <div v-if="!anonymousSignIn" class="form-group mt-4">
+                  <button class="btn btn-success" @click="showSignInPopup()">
+                    Fazer login e iniciar quiz
+                  </button>
+                  <div class="mt-5">
+                    <u class="text-info clickable" @click="anonymousSignIn = true">
+                      <small>Não quero me identificar</small>
+                    </u>
+                  </div>
+                </div>
+
+                <div v-else class="form-group mt-4">
                   <label>
                     <b>Digite nome ou apelido</b>
                   </label>
-                  <input v-model="displayName" class="form-control" type="text" maxlength="20">
+                  <div class="d-flex justify-content-center">
+                    <input
+                      v-model="displayName"
+                      class="form-control w-50"
+                      type="text"
+                      maxlength="20">
+                  </div>
+                  <div class="mt-3">
+                    <button
+                      class="btn btn-info"
+                      @click="showSignInPopup()"
+                      :disabled="isLoading.accountCreation"
+                    >
+                      Fazer login com Google
+                    </button>
+                    <button
+                      class="btn btn-success ml-2"
+                      @click="beginQuiz"
+                      :disabled="isLoading.accountCreation"
+                    >
+                      Continuar
+                    </button>
+                  </div>
                 </div>
               </template>
 
               <button
+                v-if="isLoggedIn"
                 class="btn btn-primary btn-lg"
                 type="button"
                 @click="beginQuiz"
@@ -90,12 +138,14 @@ template<template>
 <script>
 import firebase from '../firebaseConfig'
 import AlternativesManager from '@/components/AlternativesManager'
+import Navbar from '@/components/Navbar'
 
 export default {
   name: 'AnswerQuiz',
 
   components: {
-    AlternativesManager
+    AlternativesManager,
+    Navbar
   },
 
   data () {
@@ -110,7 +160,9 @@ export default {
       errors: [],
 
       isLoggedIn: false,
+      anonymousSignIn: false,
       isNewUser: false,
+      currentUser: null,
 
       db: firebase.firestore(),
       storageRef: firebase.storage().ref(),
@@ -195,6 +247,7 @@ export default {
         if (user) {
           const uid = user.uid
           this.$store.commit('setUser', user)
+          this.currentUser = user
 
           if (this.isNewUser) {
             this.isNewUser = false
@@ -205,23 +258,26 @@ export default {
                 anonymous: true,
                 displayName: this.displayName.trim(),
                 email: null,
-                friends: [this.quizOwnerUserId],
+                friends: this.isUserOwnQuiz() ? [] : [this.quizOwnerUserId],
                 photoUrl: null
               })
             this.beginQuiz()
           } else {
-            await this.db.collection('users')
-              .doc(uid)
-              .update({
-                friends: firebase.firestore.FieldValue.arrayUnion(this.quizOwnerUserId)
-              })
-              .catch(() => {
-                firebase.auth().signOut().then(() => {
-                  console.log('Sign-out successful')
-                }).catch(() => {
-                  console.error('Sign-out error')
+            if (!this.isUserOwnQuiz()) {
+              await this.db.collection('users')
+                .doc(uid)
+                .update({
+                  friends: firebase.firestore.FieldValue.arrayUnion(this.quizOwnerUserId)
                 })
-              })
+                .catch((err) => {
+                  console.log(err)
+                  firebase.auth().signOut().then(() => {
+                    console.log('Sign-out successful')
+                  }).catch(() => {
+                    console.error('Sign-out error')
+                  })
+                })
+            }
           }
         }
 
@@ -294,6 +350,14 @@ export default {
         'Desculpe, este link é inválido.',
         'Peça para seu amigo lhe enviar o link novamente via WhatsApp.'
       ]
+    },
+
+    showSignInPopup () {
+      this.$bus.$emit('signIn', `${location.pathname}`)
+    },
+
+    isUserOwnQuiz () {
+      return this.currentUser && this.currentUser.uid === this.quizOwnerUserId
     }
   }
 }
@@ -364,5 +428,9 @@ input {
 }
 .fade-enter, .fade-leave-to {
   opacity: 0;
+}
+
+.clickable {
+  cursor: pointer;
 }
 </style>
