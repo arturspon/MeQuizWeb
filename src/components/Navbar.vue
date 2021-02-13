@@ -28,31 +28,18 @@
                 <a class="nav-link" href="#">Meu perfil</a>
               </router-link>
 
-              <li class="nav-item">
-                <a class="nav-link" href="#" @click="logout()">Sair</a>
-              </li>
-
             </template>
-            <template v-else>
-
-              <li class="nav-item">
-                <a class="nav-link" href="#" @click="signInWithGoogle()">Login</a>
-              </li>
-
-            </template>
-
-            <li class="nav-item ml-2">
-              <a class="btn btn-outline-warning" href="https://mequiz.page.link/baixar-app" target="_blank">
-                Baixar app na Play Store
-              </a>
-            </li>
 
           </ul>
 
-          <!-- <form class="form-inline"> -->
-            <!-- <input v-if="activeLink == HOME_LINK" class="form-control mr-sm-2" type="search" placeholder="Procurar quiz..." aria-label="Search"> -->
-            <!-- <button class="btn btn-outline-light my-2 my-sm-0" type="submit">Procurar</button> -->
-          <!-- </form> -->
+          <form class="form-inline">
+            <a class="btn btn-outline-warning my-2 my-sm-0 mr-2" href="https://mequiz.page.link/baixar-app" target="_blank">
+              Baixar app na Play Store
+            </a>
+
+            <button v-if="isLoggedIn" class="btn btn-outline-light my-2 my-sm-0" type="button" @click="logout()">Sair</button>
+            <button v-else class="btn btn-primary my-2 my-sm-0" type="button" @click="signInWithGoogle()">Login</button>
+          </form>
         </div>
       </div>
     </nav>
@@ -84,10 +71,19 @@ export default {
   },
 
   created () {
+    this.attachListeners()
     this.authObserver()
   },
 
   methods: {
+    attachListeners () {
+      this.$bus.$on('signIn', (redirectTo) => {
+        console.log(redirectTo)
+        this.$store.commit('setRedirectUrl', redirectTo)
+        this.signInWithGoogle()
+      })
+    },
+
     signInWithGoogle () {
       const provider = new firebase.auth.GoogleAuthProvider()
 
@@ -97,13 +93,11 @@ export default {
           /** @type {firebase.auth.OAuthCredential} */
           var credential = result.credential
 
-          // This gives you a Google Access Token. You can use it to access the Google API.
           var token = credential.accessToken
           console.log(token)
-          // The signed-in user info.
           var user = result.user
+          this.$store.commit('setUser', user)
           console.log(user)
-          // ...
         }).catch((error) => {
           console.log(error)
           // Handle Errors here.
@@ -122,39 +116,23 @@ export default {
         this.isLoggedIn = !!user
 
         if (user) {
-          // const uid = user.uid
           this.$store.commit('setUser', user)
-
           this.isLoggedIn = true
 
-          // if (this.isNewUser) {
-          //   this.isNewUser = false
-          //   await this.db.collection('users')
-          //     .doc(uid)
-          //     .set({
-          //       userId: uid,
-          //       anonymous: true,
-          //       displayName: this.displayName.trim(),
-          //       email: null,
-          //       friends: [this.quizOwnerUserId],
-          //       photoUrl: null
-          //     })
-          //   this.beginQuiz()
-          // } else {
-          //   await this.db.collection('users')
-          //     .doc(uid)
-          //     .update({
-          //       friends: firebase.firestore.FieldValue.arrayUnion(this.quizOwnerUserId)
-          //     })
-          //     .catch(() => {
-          //       firebase.auth().signOut().then(() => {
-          //         console.log('Sign-out successful')
-          //       }).catch(() => {
-          //         console.error('Sign-out error')
-          //       })
-          //     })
-          // }
+          if (this.$store.state.redirectUrl) {
+            if (location.pathname === this.$store.state.redirectUrl) {
+              this.$router.go()
+            } else {
+              this.$router.push(this.$store.state.redirectUrl)
+            }
+
+            this.$store.commit('setRedirectUrl', null)
+          }
+        } else {
+          this.$store.commit('setUser', null)
         }
+
+        this.$forceUpdate()
 
         this.isLoading.loginCheck = false
       })
@@ -162,9 +140,12 @@ export default {
 
     logout () {
       firebase.auth().signOut().then(() => {
-        // console.log('Sign-out successful')
         this.isLoggedIn = false
         this.$store.commit('setUser', null)
+
+        setTimeout(() => {
+          location.reload()
+        }, 50)
       }).catch(() => {
         console.error('Sign-out error')
       })

@@ -5,19 +5,19 @@
       <h5 class="card-title">{{ quiz.name }}</h5>
       <p class="card-text">{{ quiz.description }}</p>
 
-      <button v-if="isLoggedIn" class="btn btn-outline-success w-100" @click="showLoginDialog()">
-        Fazer quiz
-      </button>
-      <router-link v-else :to="{ name: 'DoQuiz', params: { quizId: quiz.id }}" class="btn btn-outline-success w-100">
+      <router-link v-if="isLoggedIn" :to="{ name: 'DoQuiz', params: { quizId: quiz.id }}" class="btn btn-outline-success w-100">
         Fazer quiz
       </router-link>
+      <button v-else class="btn btn-outline-success w-100" @click="showLoginDialog()">
+        Fazer quiz
+      </button>
     </div>
   </div>
 </template>
 
 <script>
 import firebase from '../firebaseConfig'
-import Swal from 'sweetalert2'
+// import Swal from 'sweetalert2'
 
 export default {
   name: 'QuizCard',
@@ -35,8 +35,9 @@ export default {
   },
 
   created () {
-    this.fetchImage()
     this.isLoggedIn = !!this.$store.state.user
+    this.authObserver()
+    this.fetchImage()
   },
 
   methods: {
@@ -47,29 +48,38 @@ export default {
         .getDownloadURL()
     },
 
-    showLoginDialog () {
-      Swal.fire(
-        'Efetue login',
-        'Faça login para fazer seu quiz',
-        'warning'
-      )
-      Swal.fire({
-        title: 'Efetue login',
-        text: 'Faça login para fazer seu quiz',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Efetuar login'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          Swal.fire(
-            'Deleted!',
-            'Your file has been deleted.',
-            'success'
-          )
-        }
+    authObserver () {
+      firebase.auth().onAuthStateChanged(async (user) => {
+        this.isLoggedIn = !!user
+        this.$forceUpdate()
       })
+    },
+
+    showLoginDialog () {
+      this.$bus.$emit('signIn', `/do-quiz/${this.quiz.id}`)
+
+      // Swal.fire(
+      //   'Efetue login',
+      //   'Faça login para fazer seu quiz',
+      //   'warning'
+      // )
+      // Swal.fire({
+      //   title: 'Efetue login',
+      //   text: 'Faça login para fazer seu quiz',
+      //   icon: 'warning',
+      //   showCancelButton: true,
+      //   confirmButtonColor: '#3085d6',
+      //   cancelButtonColor: '#d33',
+      //   confirmButtonText: 'Efetuar login'
+      // }).then((result) => {
+      //   if (result.isConfirmed) {
+      //     Swal.fire(
+      //       'Deleted!',
+      //       'Your file has been deleted.',
+      //       'success'
+      //     )
+      //   }
+      // })
     }
   }
 }

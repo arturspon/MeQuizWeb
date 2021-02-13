@@ -8,7 +8,8 @@ export default new Vuex.Store({
     user: null,
     quizOwnerUser: null,
     quizAttemptRef: null,
-    correctQuizAnswers: null
+    correctQuizAnswers: null,
+    redirectUrl: null
   },
   mutations: {
     setUser (state, user) {
@@ -22,6 +23,9 @@ export default new Vuex.Store({
     },
     setQuizCorrectAnswers (state, correctAnswers) {
       state.correctQuizAnswers = correctAnswers
+    },
+    setRedirectUrl (state, url) {
+      state.redirectUrl = url
     }
   },
   actions: {

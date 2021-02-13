@@ -41,7 +41,7 @@
         </template>
 
         <div v-if="isQuizAlreadyAnswered">
-          <div class="alert alert-info" role="alert">
+          <div class="alert alert-info py-5" role="alert">
             <p>Você já fez esse quiz 😎</p>
 
             <router-link to="/" class="btn btn-primary mr-1">

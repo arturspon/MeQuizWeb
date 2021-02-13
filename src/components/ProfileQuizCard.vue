@@ -35,31 +35,47 @@
                     <div class="attempt__info text-left w-100">
                       <b>{{ attempt.user.displayName }}</b>
                       <p class="mb-1">
-                        <small>
+                        <small v-if="isAttemptDone(attempt)">
                           Acertou {{ attempt.rightAnswers }} de {{ attempt.numberOfQuestions }}
+                        </small>
+                        <small v-else class="text-warning">
+                          Seu amigo ainda não terminou de responder
                         </small>
                       </p>
 
-                      <div class="progress">
-                        <div
-                          class="progress-bar progress-bar-striped bg-success"
-                          role="progressbar"
-                          :style="`width: ${getAttemptPercentage(attempt)}%`"
-                          :aria-valuenow="getAttemptPercentage(attempt)"
-                          aria-valuemin="0"
-                          aria-valuemax="100"
+                      <div v-if="isAttemptDone(attempt)">
+                        <div class="progress">
+                          <div
+                            class="progress-bar progress-bar-striped bg-success"
+                            role="progressbar"
+                            :style="`width: ${getAttemptPercentage(attempt)}%`"
+                            :aria-valuenow="getAttemptPercentage(attempt)"
+                            aria-valuemin="0"
+                            aria-valuemax="100"
+                          >
+                            {{ getAttemptPercentage(attempt) }}%
+                          </div>
+                        </div>
+
+                        <button
+                          class="btn btn-outline-warning btn-sm mt-2"
+                          data-toggle="modal"
+                          :data-target="`#view-answer-modal-${attempt.tempId}`"
                         >
-                          {{ getAttemptPercentage(attempt) }}%
+                          Ver respostas
+                        </button>
+                      </div>
+                      <div v-else>
+                        <div class="progress">
+                          <div
+                            class="progress-bar progress-bar-striped progress-bar-animated bg-danger"
+                            role="progressbar"
+                            aria-valuenow="100"
+                            aria-valuemin="0"
+                            aria-valuemax="100"
+                            style="width: 100%"></div>
                         </div>
                       </div>
-
-                      <button
-                        class="btn btn-outline-warning btn-sm mt-2"
-                        data-toggle="modal"
-                        :data-target="`#view-answer-modal-${attempt.tempId}`"
-                      >
-                        Ver respostas
-                      </button>
                     </div>
 
                     <div v-if="attempt.user.photoUrl" class="text-right">
@@ -156,6 +172,10 @@ export default {
 
     getAttemptPercentage (attempt) {
       return Math.ceil((attempt.rightAnswers * 100) / attempt.numberOfQuestions)
+    },
+
+    isAttemptDone (attempt) {
+      return attempt.answers.length >= attempt.numberOfQuestions
     },
 
     getWhatsAppLink () {
