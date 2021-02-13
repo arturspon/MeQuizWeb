@@ -20,9 +20,9 @@
 
             <template v-if="isLoggedIn">
 
-              <!-- <li class="nav-item" :class="{'active': activeLink == FRIENDS_LINK}">
+              <router-link to="/friends" class="nav-item" :class="{'active': activeLink == FRIENDS_LINK}">
                 <a class="nav-link" href="#">Amigos</a>
-              </li> -->
+              </router-link>
 
               <router-link to="/profile" class="nav-item" :class="{'active': activeLink == PROFILE_LINK}">
                 <a class="nav-link" href="#">Meu perfil</a>

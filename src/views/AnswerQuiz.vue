@@ -31,13 +31,41 @@ template<template>
           Somente seus amigos podem responder seu quiz 🙈
         </p>
         <router-link to="/profile" class="btn btn-success">
-          Ver meus quizzes
+          Voltar
         </router-link>
       </div>
     </div>
 
+    <div v-if="existingAttempt" class="errors">
+      <div class="alert alert-info" role="alert">
+        <div v-if="quiz && quizOwnerUser" class="mb-4">
+          <h3>{{ quiz.name }}</h3>
+          <h5>de {{ quizOwnerUser.displayName }}</h5>
+        </div>
+
+        <div class="mb-4">
+          <p>
+            Você já respondeu este quiz 😎
+            <br>
+            Deseja ver suas respostas?
+          </p>
+        </div>
+
+        <router-link to="/friends" class="btn btn-info mr-1">
+          Voltar
+        </router-link>
+        <button
+          class="btn btn-warning"
+          data-toggle="modal"
+          :data-target="`#view-answers-to-friend-quiz-modal-${existingAttempt.tempId}`"
+        >
+          Ver minhas respostas
+        </button>
+      </div>
+    </div>
+
     <!-- <transition name="fade"> -->
-      <template v-if="!isUserOwnQuiz() && errors.length == 0 && !isLoading.quiz && !isLoading.getQuizOwnerUser">
+      <template v-if="!existingAttempt && !isUserOwnQuiz() && errors.length == 0 && !isLoading.quiz && !isLoading.getQuizOwnerUser">
 
         <template v-if="!isQuizStarted">
           <div class="banner">
@@ -132,6 +160,16 @@ template<template>
       </template>
     <!-- </transition> -->
 
+    <template v-if="existingAttempt">
+      <ViewAnswersToFriendQuizModal
+        :friendId="quizOwnerUserId"
+        :friend="quizOwnerUser"
+        :quizId="quizId"
+        :quiz="quiz"
+        :attempt="existingAttempt"
+      />
+    </template>
+
   </div>
 </template>
 
@@ -139,13 +177,15 @@ template<template>
 import firebase from '../firebaseConfig'
 import AlternativesManager from '@/components/AlternativesManager'
 import Navbar from '@/components/Navbar'
+import ViewAnswersToFriendQuizModal from '@/components/ViewAnswersToFriendQuizModal'
 
 export default {
   name: 'AnswerQuiz',
 
   components: {
     AlternativesManager,
-    Navbar
+    Navbar,
+    ViewAnswersToFriendQuizModal
   },
 
   data () {
@@ -167,6 +207,7 @@ export default {
       db: firebase.firestore(),
       storageRef: firebase.storage().ref(),
 
+      existingAttempt: null,
       quizId: null,
       quiz: null,
       quizImgUrl: null,
@@ -184,12 +225,17 @@ export default {
   mounted () {
     this.quizId = this.$route.params.quizId
     this.quizOwnerUserId = this.$route.params.userId
-    this.authObserver()
-    this.getQuiz()
-    this.getQuizOwnerUser()
+    this.startFlow()
   },
 
   methods: {
+    async startFlow () {
+      this.authObserver()
+      await this.getQuiz()
+      await this.getQuizOwnerUser()
+      this.checkQuizAlreadyDone()
+    },
+
     async getQuiz () {
       this.quiz = await this.db.collection('quizzes')
         .doc(this.quizId)
@@ -358,6 +404,28 @@ export default {
 
     isUserOwnQuiz () {
       return this.currentUser && this.currentUser.uid === this.quizOwnerUserId
+    },
+
+    async checkQuizAlreadyDone () {
+      if (!this.currentUser.uid) {
+        return
+      }
+
+      const attempt = await this.db.collection('activeQuizzes')
+        .doc(this.quizOwnerUserId)
+        .collection('userQuizzes')
+        .doc(this.quizId)
+        .collection('attempts')
+        .doc(this.currentUser.uid)
+        .get()
+
+      if (attempt.exists) {
+        const attemptData = attempt.data()
+        const isDone = attemptData.answers.length >= attemptData.numberOfQuestions
+        const tempId = Math.random().toString(36).substr(2, 50)
+        this.existingAttempt = isDone ? { tempId, ...attemptData } : null
+        console.log(this.existingAttempt)
+      }
     }
   }
 }

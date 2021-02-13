@@ -5,6 +5,7 @@ import AnswerQuiz from '../views/AnswerQuiz.vue'
 import PrivacyPolicy from '../views/PrivacyPolicy.vue'
 import Terms from '../views/Terms.vue'
 import DoQuiz from '../views/DoQuiz.vue'
+import Friends from '../views/Friends.vue'
 import Profile from '../views/Profile.vue'
 
 Vue.use(VueRouter)
@@ -32,6 +33,11 @@ const routes = [
     path: '/do-quiz/:quizId',
     name: 'DoQuiz',
     component: DoQuiz
+  },
+  {
+    path: '/friends',
+    name: 'Friends',
+    component: Friends
   },
   {
     path: '/profile',
