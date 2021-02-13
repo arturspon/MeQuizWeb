@@ -45,12 +45,17 @@
             <p>Você já fez esse quiz 😎</p>
 
             <div>
-              <a class="btn btn-info mr-1" :href="getWhatsAppLink()" target="_blank">
-                Compartilhar
-              </a>
-              <router-link to="/profile" class="btn btn-success">
+              <router-link to="/profile" class="btn btn-info mr-1">
                 Ver meus quizzes feitos
               </router-link>
+              <button
+                class="btn btn-success"
+                @click="shareQuiz()"
+                :disabled="isLoading.shortLinkCreation"
+              >
+                <i class="fab fa-whatsapp"></i>
+                {{ isLoading.shortLinkCreation ? 'Aguarde...' : 'Compartilhar' }}
+              </button>
             </div>
 
             <router-link to="/" class="btn btn-outline-dark mt-2">
@@ -95,7 +100,8 @@ export default {
       isLoading: {
         quiz: true,
         quizCreation: false,
-        activeQuizCheck: true
+        activeQuizCheck: true,
+        shortLinkCreation: false
       },
 
       userId: null,
@@ -224,11 +230,24 @@ export default {
       this.isQuizAlreadyAnswered = true
     },
 
-    getWhatsAppLink () {
-      const url = `https://mequiz.app/answer/${this.userId}/${this.quizId}`
-      let message = `Eu fiz o quiz "${this.quiz.name}"\nVocê consegue adivinhar minhas respostas?\n${url}`
+    getWhatsAppLink (shortLink) {
+      let message = `Eu fiz o quiz "${this.quiz.name}"\nVocê consegue adivinhar minhas respostas?\n${shortLink}`
       message = encodeURIComponent(message)
       return `https://api.whatsapp.com/send?text=${message}`
+    },
+
+    async shareQuiz () {
+      this.isLoading.shortLinkCreation = true
+
+      const longLink = await this.$store.dispatch('getLongLink', {
+        userId: this.userId,
+        quizId: this.quiz.id
+      })
+      const shortLink = await this.$store.dispatch('getShortLink', longLink)
+      const wppLink = this.getWhatsAppLink(shortLink.shortLink)
+      window.open(wppLink, '_blank')
+
+      this.isLoading.shortLinkCreation = false
     }
   }
 }

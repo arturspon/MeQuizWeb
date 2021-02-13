@@ -29,6 +29,38 @@ export default new Vuex.Store({
     }
   },
   actions: {
+    getLongLink (context, data) {
+      return new Promise((resolve, reject) => {
+        const link = `https://mequiz.app/answer/${data.userId}/${data.quizId}`
+        resolve(`https://mequiz.page.link/?link=${link}&apn=net.ddns.artspon.mequiz`)
+      })
+    },
+    getShortLink (context, url) {
+      return new Promise((resolve, reject) => {
+        fetch(
+          'https://firebasedynamiclinks.googleapis.com/v1/shortLinks?key=AIzaSyDgFfSSDYLCYMDAUvzLq_5WxaKbaAjy2I8',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              dynamicLinkInfo: {
+                domainUriPrefix: 'https://mequiz.page.link',
+                link: url,
+                androidInfo: {
+                  androidPackageName: 'net.ddns.artspon.mequiz'
+                }
+              },
+              suffix: {
+                option: 'SHORT'
+              }
+            })
+          }
+        ).then(response => response.json())
+          .then(response => resolve(response))
+      })
+    }
   },
   modules: {
   }

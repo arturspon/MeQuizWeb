@@ -12,10 +12,15 @@
       </div>
 
       <div class="mt-2">
-        <a v-if="isQuizAlreadyDone" class="btn btn-success w-100" :href="getWhatsAppLink()" target="_blank">
+        <button
+          v-if="isQuizAlreadyDone"
+          class="btn btn-success w-100"
+          @click="shareQuiz()"
+          :disabled="isLoading.shortLinkCreation"
+        >
           <i class="fab fa-whatsapp"></i>
-          Compartilhar
-        </a>
+          {{ isLoading.shortLinkCreation ? 'Aguarde...' : 'Compartilhar' }}
+        </button>
 
         <template v-else>
           <router-link v-if="isLoggedIn" :to="{ name: 'DoQuiz', params: { quizId: quiz.id }}" class="btn btn-info w-100">
@@ -44,6 +49,9 @@ export default {
     return {
       db: firebase.firestore(),
       storageRef: firebase.storage().ref(),
+      isLoading: {
+        shortLinkCreation: false
+      },
       userId: null,
       quizImgUrl: '',
       isQuizAlreadyDone: false,
@@ -92,11 +100,24 @@ export default {
       this.$bus.$emit('signIn', `/do-quiz/${this.quiz.id}`)
     },
 
-    getWhatsAppLink () {
-      const url = `https://mequiz.app/answer/${this.userId}/${this.quiz.id}`
-      let message = `Eu fiz o quiz "${this.quiz.name}"\nVocê consegue adivinhar minhas respostas?\n${url}`
+    getWhatsAppLink (shortLink) {
+      let message = `Eu fiz o quiz "${this.quiz.name}"\nVocê consegue adivinhar minhas respostas?\n${shortLink}`
       message = encodeURIComponent(message)
       return `https://api.whatsapp.com/send?text=${message}`
+    },
+
+    async shareQuiz () {
+      this.isLoading.shortLinkCreation = true
+
+      const longLink = await this.$store.dispatch('getLongLink', {
+        userId: this.userId,
+        quizId: this.quiz.id
+      })
+      const shortLink = await this.$store.dispatch('getShortLink', longLink)
+      const wppLink = this.getWhatsAppLink(shortLink.shortLink)
+      window.open(wppLink, '_blank')
+
+      this.isLoading.shortLinkCreation = false
     }
   }
 }
