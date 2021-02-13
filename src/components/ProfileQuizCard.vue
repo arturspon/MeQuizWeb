@@ -10,7 +10,7 @@
         <div class="d-flex align-items-center justify-content-center h-100">
           <div class="w-100 h-100">
 
-            <div class="text-left d-flex justify-content-between">
+            <div class="text-left">
               <div>
                 <h5 class="card-title mb-0">
                   {{ quiz.name }}
@@ -20,7 +20,8 @@
                 </small>
               </div>
               <div>
-                <a class="btn btn-info btn-sm mt-2" :href="getWhatsAppLink()" target="_blank">
+                <a class="btn btn-success btn-sm mt-2" :href="getWhatsAppLink()" target="_blank">
+                  <i class="fab fa-whatsapp"></i>
                   Compartilhar
                 </a>
               </div>

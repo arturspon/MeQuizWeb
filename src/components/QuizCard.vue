@@ -2,22 +2,36 @@
   <div class="card bg-dark">
     <img :src="quizImgUrl" class="card-img-top" alt="...">
     <div class="card-body">
-      <h5 class="card-title">{{ quiz.name }}</h5>
-      <p class="card-text">{{ quiz.description }}</p>
+      <h5 class="card-title mb-0">{{ quiz.name }}</h5>
+      <!-- <p class="card-text">{{ quiz.description }}</p> -->
 
-      <router-link v-if="isLoggedIn" :to="{ name: 'DoQuiz', params: { quizId: quiz.id }}" class="btn btn-outline-success w-100">
-        Fazer quiz
-      </router-link>
-      <button v-else class="btn btn-outline-success w-100" @click="showLoginDialog()">
-        Fazer quiz
-      </button>
+      <div>
+        <small v-if="isQuizAlreadyDone" class="text-warning">
+          Você já fez este quiz
+        </small>
+      </div>
+
+      <div class="mt-2">
+        <a v-if="isQuizAlreadyDone" class="btn btn-success w-100" :href="getWhatsAppLink()" target="_blank">
+          <i class="fab fa-whatsapp"></i>
+          Compartilhar
+        </a>
+
+        <template v-else>
+          <router-link v-if="isLoggedIn" :to="{ name: 'DoQuiz', params: { quizId: quiz.id }}" class="btn btn-info w-100">
+            Fazer quiz
+          </router-link>
+          <button v-else class="btn btn-info w-100" @click="showLoginDialog()">
+            Fazer quiz
+          </button>
+        </template>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
 import firebase from '../firebaseConfig'
-// import Swal from 'sweetalert2'
 
 export default {
   name: 'QuizCard',
@@ -28,16 +42,21 @@ export default {
 
   data () {
     return {
+      db: firebase.firestore(),
       storageRef: firebase.storage().ref(),
+      userId: null,
       quizImgUrl: '',
+      isQuizAlreadyDone: false,
       isLoggedIn: false
     }
   },
 
   created () {
+    this.userId = localStorage.getItem('uid')
     this.isLoggedIn = !!this.$store.state.user
     this.authObserver()
     this.fetchImage()
+    this.checkQuizAlreadyDone()
   },
 
   methods: {
@@ -46,6 +65,20 @@ export default {
         .root
         .child(`quizzes_banners/${this.quiz.imgName}`)
         .getDownloadURL()
+    },
+
+    async checkQuizAlreadyDone () {
+      if (!this.userId) {
+        return
+      }
+
+      const activeQuiz = await this.db.collection('activeQuizzes')
+        .doc(this.userId)
+        .collection('userQuizzes')
+        .doc(this.quiz.id)
+        .get()
+
+      this.isQuizAlreadyDone = activeQuiz.exists
     },
 
     authObserver () {
@@ -57,29 +90,13 @@ export default {
 
     showLoginDialog () {
       this.$bus.$emit('signIn', `/do-quiz/${this.quiz.id}`)
+    },
 
-      // Swal.fire(
-      //   'Efetue login',
-      //   'Faça login para fazer seu quiz',
-      //   'warning'
-      // )
-      // Swal.fire({
-      //   title: 'Efetue login',
-      //   text: 'Faça login para fazer seu quiz',
-      //   icon: 'warning',
-      //   showCancelButton: true,
-      //   confirmButtonColor: '#3085d6',
-      //   cancelButtonColor: '#d33',
-      //   confirmButtonText: 'Efetuar login'
-      // }).then((result) => {
-      //   if (result.isConfirmed) {
-      //     Swal.fire(
-      //       'Deleted!',
-      //       'Your file has been deleted.',
-      //       'success'
-      //     )
-      //   }
-      // })
+    getWhatsAppLink () {
+      const url = `https://mequiz.app/answer/${this.userId}/${this.quiz.id}`
+      let message = `Eu fiz o quiz "${this.quiz.name}"\nVocê consegue adivinhar minhas respostas?\n${url}`
+      message = encodeURIComponent(message)
+      return `https://api.whatsapp.com/send?text=${message}`
     }
   }
 }

@@ -12,6 +12,23 @@
 :root {
   --colorPrimary: #16A085;
   --colorAccent: #FF6600;
+
+  ::-webkit-scrollbar {
+    width: 12px;
+    background-color: transparent;
+  }
+
+  ::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    border-radius: 10px;
+    background-color: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+    background-color: var(--colorAccent);
+  }
 }
 
 #app {
@@ -20,8 +37,6 @@
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: white;
-  // background-color: rgba(0, 0, 0, 0.5);
-  // height: 100vh;
 }
 
 body {

@@ -2,7 +2,7 @@
   <div>
     <nav class="navbar navbar-dark navbar-expand-lg text-white">
       <div class="container">
-        <a class="navbar-brand" href="#">
+        <a class="navbar-brand" href="/">
           <img src="@/assets/images/mequiz_logo.png" width="30" height="30" class="d-inline-block align-top" alt="">
           MeQuiz
         </a>
