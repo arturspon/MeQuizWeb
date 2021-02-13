@@ -4,7 +4,7 @@
 
     <div class="container mt-3">
 
-      <div v-if="isLoading.quizzes || isLoading.quizzes" class="text-center">
+      <div v-if="isLoading.quizzes || isLoading.loginCheck" class="text-center">
         <div class="spinner-border text-success" style="width: 3rem; height: 3rem;" role="status">
           <span class="sr-only">Carregando...</span>
         </div>
