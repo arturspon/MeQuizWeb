@@ -47,8 +47,13 @@ export default {
   methods: {
     getQuestionText () {
       const quizOwnerName = this.$store.state.quizOwnerUser.displayName
-      return this.text.replace('%1$s', `<b>${quizOwnerName}</b>`)
-      // return this.text.replace(/%1\$s/g, `<b>${quizOwnerName}</b>`)
+
+      let text = this.text
+      while (text.indexOf('%1$s') !== -1) {
+        text = text.replace('%1$s', `<b>${quizOwnerName}</b>`)
+      }
+
+      return text
     },
 
     selectAlternative () {

@@ -159,8 +159,12 @@ export default {
       const replaceText = index !== undefined ? 'Você' : '<b>Você</b>'
       index = index !== undefined ? index : this.questionIndex
 
-      const question = this.quiz.questions[index]
-      return question.replace('%1$s', replaceText)
+      let question = this.quiz.questions[index]
+      while (question.indexOf('%1$s') !== -1) {
+        question = question.replace('%1$s', replaceText)
+      }
+
+      return question
     },
 
     getStartOfAnswersIndexByQuestion (questionIndex) {
