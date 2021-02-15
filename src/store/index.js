@@ -6,6 +6,7 @@ Vue.use(Vuex)
 export default new Vuex.Store({
   state: {
     user: null,
+    userName: null,
     quizOwnerUser: null,
     quizAttemptRef: null,
     correctQuizAnswers: null,
@@ -14,6 +15,9 @@ export default new Vuex.Store({
   mutations: {
     setUser (state, user) {
       state.user = user
+    },
+    setUserName (state, userName) {
+      state.userName = userName
     },
     setQuizOwnerUser (state, user) {
       state.quizOwnerUser = user

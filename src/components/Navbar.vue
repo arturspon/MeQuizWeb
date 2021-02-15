@@ -78,7 +78,6 @@ export default {
   methods: {
     attachListeners () {
       this.$bus.$on('signIn', (redirectTo) => {
-        console.log(redirectTo)
         this.$store.commit('setRedirectUrl', redirectTo)
         this.signInWithGoogle()
       })
@@ -149,7 +148,7 @@ export default {
         localStorage.setItem('uid', null)
 
         setTimeout(() => {
-          location.reload()
+          location.href = '/'
         }, 50)
       }).catch(() => {
         console.error('Sign-out error')

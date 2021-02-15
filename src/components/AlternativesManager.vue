@@ -60,6 +60,7 @@
 </template>
 
 <script>
+import firebase from '../firebaseConfig'
 import Alternative from '@/components/Alternative'
 import Swal from 'sweetalert2'
 
@@ -71,12 +72,15 @@ export default {
   },
 
   props: {
+    quizId: String,
     quiz: Object,
     correctQuizAnswers: Array
   },
 
   data () {
     return {
+      db: firebase.firestore(),
+
       isLoading: {
         quizAttemptCheck: false
       },
@@ -174,6 +178,7 @@ export default {
 
       const isQuizOver = this.currentQuestionIndex === this.quiz.questions.length - 1
       if (isQuizOver) {
+        this.createNotification()
         this.showCompletedQuizDialog()
         return
       }
@@ -261,13 +266,30 @@ export default {
         confirmButtonText: 'OK',
         allowOutsideClick: false
       }).then(() => {
-        location.href = '/'
+        setTimeout(() => {
+          location.href = '/'
+        }, 50)
       })
     },
 
     getTimeRemainingPercentage () {
       const secondsRemaining = this.questionTimeLimit - this.questionSecondsElapsed
       return ((100 * secondsRemaining) / this.questionTimeLimit)
+    },
+
+    createNotification () {
+      this.db.collection('notifications').doc().set({
+        originUserId: this.$store.state.user.uid,
+        originUserName: this.$store.state.user.displayName || this.$store.state.userName,
+        targetUserId: this.$store.state.quizOwnerUser.userId,
+        targetUserName: this.quizOwnerName,
+        notificationTitle: this.quiz.name,
+        notificationBody: `${this.$store.state.user.displayName} acertou ${this.correctAnswersCount} de ${this.quiz.questions.length} questões!`,
+        quizId: this.quizId,
+        quizName: this.quiz.name,
+        numberOfQuestions: this.quiz.questions.length,
+        rightAnswers: this.correctAnswersCount
+      })
     }
   }
 }

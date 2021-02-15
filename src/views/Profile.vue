@@ -55,7 +55,6 @@ export default {
     async getQuizzes () {
       this.isLoading.quizzes = true
 
-      console.log(this.$store.state.user.uid)
       const quizDocs = await this.db.collection('activeQuizzes')
         .doc(this.$store.state.user.uid)
         .collection('userQuizzes')

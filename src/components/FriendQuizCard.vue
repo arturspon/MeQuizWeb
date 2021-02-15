@@ -61,7 +61,6 @@ export default {
     this.userId = localStorage.getItem('uid')
     this.fetchImage()
     this.checkQuizAlreadyDone()
-    console.log(this.friendQuiz)
   },
 
   methods: {

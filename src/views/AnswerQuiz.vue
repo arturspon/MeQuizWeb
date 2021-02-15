@@ -154,7 +154,12 @@ template<template>
         </template>
 
         <template v-else>
-          <AlternativesManager v-show="isQuizStarted" :quiz="quiz" :correct-quiz-answers="correctQuizAnswers" />
+          <AlternativesManager
+            v-show="isQuizStarted"
+            :quizId="quizId"
+            :quiz="quiz"
+            :correct-quiz-answers="correctQuizAnswers"
+          />
         </template>
 
       </template>
@@ -315,8 +320,7 @@ export default {
                 .update({
                   friends: firebase.firestore.FieldValue.arrayUnion(this.quizOwnerUserId)
                 })
-                .catch((err) => {
-                  console.log(err)
+                .catch(() => {
                   firebase.auth().signOut().then(() => {
                     console.log('Sign-out successful')
                   }).catch(() => {
@@ -333,12 +337,11 @@ export default {
 
     signInAnonymously () {
       this.isLoading.accountCreation = true
-      console.log('Logging in...')
       firebase.auth().signInAnonymously()
         .then(() => {
           this.isNewUser = true
-          console.log('User signed in')
           this.isLoading.accountCreation = false
+          this.$store.commit('setUserName', this.displayName)
         })
         .catch((error) => {
           console.log(error)
@@ -407,7 +410,7 @@ export default {
     },
 
     async checkQuizAlreadyDone () {
-      if (!this.currentUser.uid) {
+      if (!this.currentUser || !this.currentUser.uid) {
         return
       }
 
@@ -424,7 +427,6 @@ export default {
         const isDone = attemptData.answers.length >= attemptData.numberOfQuestions
         const tempId = Math.random().toString(36).substr(2, 50)
         this.existingAttempt = isDone ? { tempId, ...attemptData } : null
-        console.log(this.existingAttempt)
       }
     }
   }
