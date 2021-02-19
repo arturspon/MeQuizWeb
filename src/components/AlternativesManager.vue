@@ -284,11 +284,13 @@ export default {
         targetUserId: this.$store.state.quizOwnerUser.userId,
         targetUserName: this.quizOwnerName,
         notificationTitle: this.quiz.name,
-        notificationBody: `${this.$store.state.user.displayName} acertou ${this.correctAnswersCount} de ${this.quiz.questions.length} questões!`,
+        notificationBody: `${this.$store.state.user.displayName || this.$store.state.userName} acertou ${this.correctAnswersCount} de ${this.quiz.questions.length} questões!`,
         quizId: this.quizId,
         quizName: this.quiz.name,
         numberOfQuestions: this.quiz.questions.length,
-        rightAnswers: this.correctAnswersCount
+        rightAnswers: this.correctAnswersCount,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        isFromBrowser: true
       })
     }
   }
