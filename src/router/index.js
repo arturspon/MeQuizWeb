@@ -7,6 +7,7 @@ import Terms from '../views/Terms.vue'
 import DoQuiz from '../views/DoQuiz.vue'
 import Friends from '../views/Friends.vue'
 import Profile from '../views/Profile.vue'
+import CreateQuiz from '../views/CreateQuiz.vue'
 
 Vue.use(VueRouter)
 
@@ -53,6 +54,11 @@ const routes = [
     path: '/privacy_policy',
     name: 'PrivacyPolicy',
     component: PrivacyPolicy
+  },
+  {
+    path: '/create-quiz',
+    name: 'CreateQuiz',
+    component: CreateQuiz
   },
   {
     path: '*',
