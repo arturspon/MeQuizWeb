@@ -8,6 +8,7 @@ import DoQuiz from '../views/DoQuiz.vue'
 import Friends from '../views/Friends.vue'
 import Profile from '../views/Profile.vue'
 import CreateQuiz from '../views/CreateQuiz.vue'
+import Admin from '../views/Admin.vue'
 
 Vue.use(VueRouter)
 
@@ -59,6 +60,11 @@ const routes = [
     path: '/create-quiz',
     name: 'CreateQuiz',
     component: CreateQuiz
+  },
+  {
+    path: '/admin',
+    name: 'Admin',
+    component: Admin
   },
   {
     path: '*',
