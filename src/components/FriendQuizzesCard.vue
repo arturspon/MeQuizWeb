@@ -10,8 +10,8 @@
             <b>{{ friend ? friend.displayName : 'Seu amigo' }}</b>
           </div>
           <div class="text-right">
-            <img v-if="friend && friend.photoUrl" :src="friend.photoUrl" class="rounded-circle w-75">
-            <img v-else src="@/assets/images/user.png" class="rounded-circle" width="72">
+            <img v-if="friend && friend.photoUrl" :src="friend.photoUrl" class="rounded-circle w-75" loading="lazy">
+            <img v-else src="@/assets/images/user.png" class="rounded-circle" width="72" loading="lazy">
           </div>
         </div>
 
