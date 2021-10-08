@@ -37,7 +37,7 @@
               Baixar app na Play Store
             </a>
 
-            <button v-if="isLoggedIn" class="btn btn-outline-light my-2 my-sm-0" type="button" @click="logout()">Sair</button>
+            <button v-if="isLoggedIn" class="btn btn-outline-light my-2 my-sm-0" type="button" @click="logoutDialog()">Sair</button>
             <button v-else class="btn btn-primary my-2 my-sm-0" type="button" @click="signInWithGoogle()">Login</button>
           </form>
         </div>
@@ -48,6 +48,7 @@
 
 <script>
 import firebase from '../firebaseConfig'
+import Swal from 'sweetalert2'
 
 export default {
   name: 'Navbar',
@@ -138,6 +139,23 @@ export default {
         this.$forceUpdate()
 
         this.isLoading.loginCheck = false
+      })
+    },
+
+    logoutDialog () {
+      Swal.fire({
+        title: 'Sair',
+        text: 'Tem certeza que deseja sair de sua conta?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sair',
+        cancelButtonText: 'Voltar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.logout()
+        }
       })
     },
 
