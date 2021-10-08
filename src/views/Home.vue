@@ -10,11 +10,33 @@
         </div>
       </div>
 
+      <div v-else class="form-group mt-3">
+        <input
+          v-model="searchQuery"
+          @input="filterQuizzes"
+          type="text"
+          class="form-control"
+          placeholder="Procure por algum quiz aqui..."
+        >
+      </div>
+
       <div v-if="quizzes.length > 0" class="mt-4">
+        <div v-if="areAllQuizzesHidden()" class="alert alert-warning">
+          Nenhum quiz encontrado para este filtro.
+          <br>
+          Tente refinar sua pesquisa.
+        </div>
+
         <div class="card-columns">
-          <QuizCard v-for="quiz in quizzes" :key="quiz.id" :quiz="quiz" />
+          <QuizCard
+            v-show="!quiz.isHidden"
+            v-for="quiz in quizzes"
+            :key="quiz.id"
+            :quiz="quiz"
+          />
         </div>
       </div>
+
       <div v-else-if="!isLoading.quizzes">
         Não há nenhum quiz disponível
       </div>
@@ -41,10 +63,14 @@ export default {
     return {
       db: firebase.firestore(),
       storageRef: firebase.storage().ref(),
+
       isLoading: {
         quizzes: true
       },
-      quizzes: []
+
+      quizzes: [],
+
+      searchQuery: ''
     }
   },
 
@@ -64,6 +90,19 @@ export default {
       })
 
       this.isLoading.quizzes = false
+    },
+
+    filterQuizzes () {
+      const query = this.searchQuery.toLowerCase()
+
+      this.quizzes.forEach(quiz => {
+        const matchesQuery = quiz.name.toLowerCase().includes(query)
+        quiz.isHidden = !matchesQuery
+      })
+    },
+
+    areAllQuizzesHidden () {
+      return this.quizzes.every(quiz => quiz.isHidden)
     }
   }
 }
