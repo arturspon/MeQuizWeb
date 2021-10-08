@@ -1,7 +1,7 @@
 <template>
   <div class="mb-2">
     <div class="card bg-dark text-left">
-      <img :src="quizImgUrl" class="card-img">
+      <img :src="quizImgUrl" class="card-img" loading="lazy">
       <div class="card-img-overlay">
 
         <div v-if="isLoading.quiz" class="d-flex justify-content-center">

@@ -1,6 +1,6 @@
 <template>
   <div class="card bg-dark">
-    <img :src="quizImgUrl" class="card-img-top" alt="...">
+    <img :src="quizImgUrl" class="card-img-top" loading="lazy">
     <div class="card-body">
       <h5 class="card-title mb-0">{{ quiz.name }}</h5>
       <!-- <p class="card-text">{{ quiz.description }}</p> -->

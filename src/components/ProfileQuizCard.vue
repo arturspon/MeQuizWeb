@@ -2,8 +2,8 @@
   <div class="container col mb-4">
     <div class="card bg-dark text-white h-100">
 
-      <img v-if="quizImgUrl" :src="quizImgUrl" class="card-img">
-      <img v-else src="@/assets/images/black_wood.png" class="card-img">
+      <img v-if="quizImgUrl" :src="quizImgUrl" class="card-img" loading="lazy">
+      <img v-else src="@/assets/images/black_wood.png" class="card-img" loading="lazy">
 
       <div class="card-img-overlay">
 
@@ -84,7 +84,7 @@
                     </div>
 
                     <div v-if="attempt.user.photoUrl" class="text-right">
-                      <img :src="attempt.user.photoUrl" class="rounded-circle w-75">
+                      <img :src="attempt.user.photoUrl" class="rounded-circle w-75" loading="lazy">
                     </div>
 
                     <ViewAnswersModal :quiz="quiz" :attempt="attempt" />

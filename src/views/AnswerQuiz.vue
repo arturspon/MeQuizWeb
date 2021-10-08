@@ -69,7 +69,7 @@ template<template>
 
         <template v-if="!isQuizStarted">
           <div class="banner">
-            <img :src="quizImgUrl" alt="Imagem do Quiz" class="w-100 h-100">
+            <img :src="quizImgUrl" alt="Imagem do Quiz" class="w-100 h-100" loading="lazy">
             <div class="banner__fade">
               <div class="banner__title pl-2">
                 <h3>
