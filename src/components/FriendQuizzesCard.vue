@@ -8,6 +8,10 @@
             <small class="text-muted">Quizzes</small>
             <br>
             <b>{{ friend ? friend.displayName : 'Seu amigo' }}</b>
+            <br>
+            <button class="btn btn-outline-primary btn-sm mt-2" @click="showQuizzes = !showQuizzes">
+              {{ showQuizzes ? '🡡' : '🡣' }}
+            </button>
           </div>
           <div class="text-right">
             <img v-if="friend && friend.photoUrl" :src="friend.photoUrl" class="rounded-circle w-75" loading="lazy">
@@ -15,7 +19,7 @@
           </div>
         </div>
 
-        <div class="mt-3">
+        <div v-show="showQuizzes" class="mt-3">
           <FriendQuizCard
             v-for="(quiz, index) in friendQuizzes"
             :key="index"
@@ -50,7 +54,8 @@ export default {
       friend: null,
       quizImgUrl: '',
       isQuizAlreadyDone: false,
-      isLoggedIn: false
+      isLoggedIn: false,
+      showQuizzes: true
     }
   },
 
