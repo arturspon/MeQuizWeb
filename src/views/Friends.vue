@@ -10,6 +10,16 @@
         </div>
       </div>
 
+      <div v-if="!hasFriends" class="alert alert-warning text-center">
+        Nenhum amigo respondeu seus quizzes ainda.
+        <br>
+        Faz um quiz e envie para ele responder 😀
+        <br>
+        <router-link to="/home" class="btn btn-info mt-1">
+          Ver quizzes
+        </router-link>
+      </div>
+
       <template v-if="friendQuizzes.length > 0">
         <FriendQuizzesCard
           v-for="(quizzes, index) in friendQuizzes"
@@ -45,7 +55,9 @@ export default {
         friendQuizzes: false,
         loginCheck: false
       },
+
       isLoggedIn: false,
+      hasFriends: true,
 
       userId: null,
       friendQuizzes: []
@@ -62,10 +74,18 @@ export default {
     async fetchFriendQuizzes () {
       this.isLoading.friendQuizzes = true
 
-      const friends = (await this.db
+      const friendsDoc = await this.db
         .collection('users')
         .doc(this.userId)
-        .get()).data().friends
+        .get()
+
+      if (!friendsDoc.exists) {
+        this.hasFriends = false
+        this.isLoading.friendQuizzes = false
+        return
+      }
+
+      const friends = friendsDoc.data().friends
 
       const friendQuizzesPromises = friends.map(async friendId => {
         return await this.db.collection('activeQuizzes')
