@@ -20,11 +20,28 @@
         </router-link>
       </div>
 
+      <div v-else-if="!isLoading.friendQuizzes" class="form-group mt-3">
+        <input
+          v-model="searchQuery"
+          type="text"
+          class="form-control"
+          placeholder="Procure por algum amigo aqui..."
+        >
+      </div>
+
+      <div v-if="areAllFriendsHidden()" class="alert alert-warning">
+        Nenhum amigo encontrado com esse nome.
+        <br>
+        Tente refinar sua pesquisa.
+      </div>
+
       <template v-if="friendQuizzes.length > 0">
         <FriendQuizzesCard
           v-for="(quizzes, index) in friendQuizzes"
           :key="index"
           :friendQuizzes="quizzes"
+          :searchQuery="searchQuery"
+          ref="friendQuizCard"
         />
       </template>
 
@@ -60,7 +77,9 @@ export default {
       hasFriends: true,
 
       userId: null,
-      friendQuizzes: []
+      friendQuizzes: [],
+
+      searchQuery: ''
     }
   },
 
@@ -116,6 +135,16 @@ export default {
 
         this.isLoading.loginCheck = false
       })
+    },
+
+    areAllFriendsHidden () {
+      const friendQuizCards = this.$refs.friendQuizCard
+
+      if (!friendQuizCards) {
+        return false
+      }
+
+      return friendQuizCards.every(quiz => !quiz.isVisible())
     }
   }
 }
