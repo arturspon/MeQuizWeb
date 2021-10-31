@@ -10,8 +10,31 @@
         </div>
       </div>
 
+      <template v-else>
+        <div class="form-group mt-3">
+          <input
+            v-model="searchQuery"
+            @input="filterQuizzes"
+            type="text"
+            class="form-control"
+            placeholder="Procure por algum quiz aqui..."
+          >
+        </div>
+
+        <div v-if="areAllQuizzesHidden()" class="alert alert-warning">
+          Nenhum quiz encontrado para este filtro.
+          <br>
+          Tente refinar sua pesquisa.
+        </div>
+      </template>
+
       <div v-if="!isLoading.quizzes" class="row row-cols-1 row-cols-md-2">
-        <ProfileQuizCard v-for="quiz in quizzes" :key="quiz.id" :quiz="quiz" />
+        <ProfileQuizCard
+          v-show="!quiz.isHidden"
+          v-for="quiz in quizzes"
+          :key="quiz.id"
+          :quiz="quiz"
+        />
       </div>
 
     </div>
@@ -42,7 +65,9 @@ export default {
         loginCheck: false
       },
 
-      quizzes: []
+      quizzes: [],
+
+      searchQuery: ''
     }
   },
 
@@ -87,6 +112,19 @@ export default {
 
         this.isLoading.loginCheck = false
       })
+    },
+
+    filterQuizzes () {
+      const query = this.searchQuery.toLowerCase()
+
+      this.quizzes.forEach(quiz => {
+        const matchesQuery = quiz.name.toLowerCase().includes(query)
+        quiz.isHidden = !matchesQuery
+      })
+    },
+
+    areAllQuizzesHidden () {
+      return this.quizzes.every(quiz => quiz.isHidden)
     }
   }
 }
