@@ -1,5 +1,5 @@
 <template>
-  <div class="mb-2">
+  <div v-show="isVisible()" class="mb-2">
     <div class="card bg-dark text-left">
       <div class="card-body">
         <div class="header d-flex justify-content-between">
@@ -40,7 +40,8 @@ export default {
   name: 'FriendQuizzesCard',
 
   props: {
-    friendQuizzes: Array
+    friendQuizzes: Array,
+    searchQuery: String
   },
 
   components: {
@@ -83,6 +84,11 @@ export default {
         .get()
 
       this.isQuizAlreadyDone = activeQuiz.exists
+    },
+
+    isVisible () {
+      const query = this.searchQuery.toLowerCase()
+      return !this.friend || this.friend.displayName.toLowerCase().includes(query)
     }
   }
 }
